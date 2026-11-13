@@ -247,7 +247,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
     <h2>Install on your phone</h2>
     <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
-  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 11 · 13 Nov 2026</div>
+  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 12 · 13 Nov 2026</div>
 </section>
 </div>
 
@@ -549,6 +549,8 @@ function openBooking(id,pre){
   const ex=id?data.bookings.find(b=>b.id===id&&!b.deleted):null;
   pre=pre||{};
   const b=ex?JSON.parse(JSON.stringify(ex)):{id:'',customer:'',phone:'',start:pre.start||todayS,end:pre.start||todayS,route:pre.route||'',km:pre.km||'',rental:'',fuel:pre.fuel||'',other:'',status:'confirmed',payments:[],notes:'',withDriver:true,driverFee:'',affiliate:false,affiliateFee:'',rentalManual:false,driverManual:false,affiliateManual:false};
+  const simple=ex?!!ex.simple:!!pre.simple; // quick booking: just one editable total
+  if(simple&&!ex){b.withDriver=false;b.rental=4000;b.fuel='';b.rentalManual=b.driverManual=b.affiliateManual=true;b.driverFee=0;b.affiliateFee=0}
   if(ex&&ex.withDriver===undefined){b.withDriver=false;b.rentalManual=true;b.driverManual=true;b.driverFee=b.driverFee||0} // older booking: keep its saved amounts
   if(ex&&ex.affiliate===undefined){b.affiliate=false;b.affiliateFee=b.affiliateFee||0}
   const root=$('#modal-root');let detOpen=false;
@@ -568,10 +570,10 @@ function openBooking(id,pre){
       <div><label>Last day</label><input id="f-end" type="date" value="${b.end}"></div>
       <div class="full"><label>Status</label><select id="f-status"><option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option></select></div>
       <div class="full"><label>Route / destination</label><div class="pinrow"><input id="f-route" value="${esc(b.route||'')}"><a class="btn tile" id="f-map" target="_blank" rel="noopener" aria-label="Open in Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
-      <div class="full"><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>
+      ${simple?'':`<div class="full"><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>`}
      </div>
-     ${lastCalc&&lastCalc.fuel?`<button class="btn sm" id="f-uselast" style="margin-top:8px">Use fuel from calculator (${peso(lastCalc.fuel)})</button>`:''}
-     <div class="total-line"><span>Total</span><b id="f-total"></b></div>
+     ${!simple&&lastCalc&&lastCalc.fuel?`<button class="btn sm" id="f-uselast" style="margin-top:8px">Use fuel from calculator (${peso(lastCalc.fuel)})</button>`:''}
+     ${simple?`<div class="full" style="margin-top:8px"><label>Total ₱</label><input id="f-total" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>`:`<div class="total-line"><span>Total</span><b id="f-total"></b></div>
      <details id="f-det" ${detOpen?'open':''}><summary>Fee breakdown (automatic)</summary>
        <div class="grid" style="margin-top:12px">
         <div><label>Van rental ₱</label><input id="f-rental" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>
@@ -583,7 +585,7 @@ function openBooking(id,pre){
        </div>
        <div class="note" id="f-explain"></div>
        <button class="btn sm" id="f-reset" style="margin-top:8px">Reset fees to automatic</button>
-     </details>
+     </details>`}
      <h3 style="margin:16px 0 8px;font-size:14px">Payments</h3>
      <div id="f-pays"></div>
      <div class="row"><button class="btn sm" id="f-addpay" style="flex:0">+ Add payment</button><span class="sp"></span><span id="f-bal" style="text-align:right"></span></div>
@@ -592,12 +594,13 @@ function openBooking(id,pre){
      <div class="row" style="margin-top:14px">${ex?'<button class="btn danger" id="f-del" style="flex:0 0 auto">Delete</button>':''}<button class="btn" id="f-cancel">Close</button><button class="btn pri" id="f-save">Save</button></div>
     </div></div>`;
     drawPays();refresh(!ex);
-    ['customer','phone','start','end','status','route','fuel','notes','other'].forEach(k=>$('#f-'+k).addEventListener('input',()=>{
+    ['customer','phone','start','end','status','route','fuel','notes','other'].filter(k=>$('#f-'+k)).forEach(k=>$('#f-'+k).addEventListener('input',()=>{
       b[k]=$('#f-'+k).value;
       if(k==='start'&&b.end<b.start){b.end=b.start;$('#f-end').value=b.end}
       if(k==='end'&&b.end<b.start){b.start=b.end;$('#f-start').value=b.start}
       if(k==='phone')$('#call').href='tel:'+b.phone.replace(/[^+\d]/g,'');
       refresh(['fuel','start','end'].includes(k))}));
+    if(simple)$('#f-total').addEventListener('input',()=>{b.rental=$('#f-total').value;refresh()});else{
     $('#f-rental').addEventListener('input',()=>{b.rental=$('#f-rental').value;b.rentalManual=true;refresh()});
     $('#f-driverFee').addEventListener('input',()=>{b.driverFee=$('#f-driverFee').value;b.driverManual=true;refresh()});
     $('#f-withDriver').addEventListener('change',e=>{b.withDriver=e.target.checked;b.driverManual=false;refresh(true)});
@@ -605,6 +608,7 @@ function openBooking(id,pre){
     $('#f-affiliateFee').addEventListener('input',()=>{b.affiliateFee=$('#f-affiliateFee').value;b.affiliateManual=true;refresh()});
     $('#f-reset').onclick=()=>{b.rentalManual=false;b.driverManual=false;b.affiliateManual=false;refresh(true)};
     $('#f-det').addEventListener('toggle',()=>{detOpen=$('#f-det').open});
+    }
     const ul=$('#f-uselast');if(ul)ul.onclick=()=>{b.fuel=lastCalc.fuel;if(!b.route)b.route=lastCalc.route;if(!b.km)b.km=lastCalc.km;auto();draw()};
     $('#f-addpay').onclick=()=>{b.payments.push({date:todayS,amount:'',note:''});drawPays();sums()};
     $('#f-cancel').onclick=()=>root.innerHTML='';
@@ -615,13 +619,13 @@ function openBooking(id,pre){
   const refresh=(recalc)=>{
     if(recalc)auto();
     const set=(id,v)=>{const el=$(id);if(el&&document.activeElement!==el)el.value=v};
-    set('#f-rental',b.rental);set('#f-driverFee',b.driverFee);set('#f-affiliateFee',b.affiliateFee);
+    if(!simple){set('#f-rental',b.rental);set('#f-driverFee',b.driverFee);set('#f-affiliateFee',b.affiliateFee);
     const s=data.settings,d=daysOf(),pl=d>1?'s':'';
-    $('#f-explain').textContent='Rental '+peso(s.rentalDay)+' × '+d+' day'+pl+' + '+peso(s.rentalPer)+' per '+peso(s.rentalBlock)+' of fuel'+(b.rentalManual?' (edited by hand)':'')+' · Driver '+peso(s.driverDay)+' × '+d+(b.driverManual?' (edited by hand)':'')+' · Affiliate '+peso(s.affiliateDay)+' × '+d+(b.affiliateManual?' (edited by hand)':'');
+    $('#f-explain').textContent='Rental '+peso(s.rentalDay)+' × '+d+' day'+pl+' + '+peso(s.rentalPer)+' per '+peso(s.rentalBlock)+' of fuel'+(b.rentalManual?' (edited by hand)':'')+' · Driver '+peso(s.driverDay)+' × '+d+(b.driverManual?' (edited by hand)':'')+' · Affiliate '+peso(s.affiliateDay)+' × '+d+(b.affiliateManual?' (edited by hand)':'')}
     sums();checkOverlap();mapLink();
   };
   const mapLink=()=>{$('#f-map').href='https://www.google.com/maps/search/?api=1&query='+enc((b.route||'').replace(/\(round trip\)/i,'').replace(/→/g,' to '))};
-  const sums=()=>{const t=totalOf(b),p=paidOf(b),bal=t-p;$('#f-total').textContent=peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
+  const sums=()=>{const t=totalOf(b),p=paidOf(b),bal=t-p;if(!simple)$('#f-total').textContent=peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
   const drawPays=()=>{
     $('#f-pays').innerHTML=b.payments.map((p,i)=>`<div class="pay"><input type="date" data-i="${i}" data-k="date" value="${esc(p.date)}"><input type="number" inputmode="decimal" min="0" placeholder="₱ amount" data-i="${i}" data-k="amount" value="${esc(p.amount)}"><button class="btn sm" data-x="${i}" aria-label="Remove payment">✕</button><input placeholder="note (GCash, cash, deposit…)" data-i="${i}" data-k="note" value="${esc(p.note||'')}"></div>`).join('')||'<div class="note">No payments recorded.</div>';
     $('#f-pays').querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{b.payments[el.dataset.i][el.dataset.k]=el.value;sums()}));
@@ -633,7 +637,7 @@ function openBooking(id,pre){
   };
   const save=()=>{
     const rec={id:ex?ex.id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),customer:(b.customer||'').trim(),phone:(b.phone||'').trim(),start:b.start,end:b.end,status:b.status,route:b.route||'',km:num(b.km),
-      fuel:num(b.fuel),rental:num(b.rental),withDriver:!!b.withDriver,driverFee:num(b.driverFee),rentalManual:!!b.rentalManual,driverManual:!!b.driverManual,affiliate:!!b.affiliate,affiliateFee:num(b.affiliateFee),affiliateManual:!!b.affiliateManual,other:num(b.other),notes:b.notes||'',
+      fuel:num(b.fuel),rental:num(b.rental),withDriver:!!b.withDriver,driverFee:num(b.driverFee),rentalManual:!!b.rentalManual,driverManual:!!b.driverManual,affiliate:!!b.affiliate,affiliateFee:num(b.affiliateFee),affiliateManual:!!b.affiliateManual,other:num(b.other),simple,notes:b.notes||'',
       payments:b.payments.filter(p=>num(p.amount)!==0).map(p=>({date:p.date,amount:num(p.amount),note:p.note||''}))};
     upsert('bookings',rec);
     S.month=new Date(parse(rec.start).getFullYear(),parse(rec.start).getMonth(),1);S.sel=rec.start;
@@ -653,7 +657,7 @@ document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.onclick=()=>s
 $('#prev').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);renderStats();renderCal()};
 $('#next').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);renderStats();renderCal()};
 $('#today').onclick=()=>{const n=new Date();S.month=new Date(n.getFullYear(),n.getMonth(),1);S.sel=todayS;render()};
-$('#fab').onclick=()=>openBooking(null,{start:S.sel});
+$('#fab').onclick=()=>openBooking(null,{start:S.sel,simple:true});
 $('#filter').onchange=e=>{S.filter=e.target.value;renderLists()};
 $('#cal').addEventListener('click',e=>{const d=e.target.closest('.day');if(d){S.sel=d.dataset.d;renderCal();renderLists()}});
 document.addEventListener('click',e=>{
