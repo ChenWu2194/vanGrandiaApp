@@ -52,6 +52,12 @@ html.dark .btn.pri{color:#0b1020;box-shadow:none}
 .row>.btn{flex:1}
 .sp{flex:1}
 .pinrow{display:flex;gap:8px}.pinrow input{flex:1;min-width:0}
+.acwrap{position:relative;flex:1;min-width:0;display:flex}.acwrap input{width:100%}
+.ac{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--card);border-radius:14px;box-shadow:var(--shadow);z-index:30;overflow:hidden}
+.ac[hidden]{display:none}
+.ac button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line,rgba(128,128,128,.18));padding:10px 14px;font:inherit;color:inherit;cursor:pointer}
+.ac button:first-child{border-top:0}.ac button:active,.ac button:hover{background:rgba(128,128,128,.12)}
+.ac b{display:block;font-weight:600;font-size:14px}.ac small{display:block;opacity:.65;font-size:12px;margin-top:1px}
 .tile{flex:0 0 48px;width:48px;padding:0!important}
 .result{background:var(--acc2);border-radius:18px;padding:16px;margin-top:14px}
 .big{font-size:36px;font-weight:700;color:var(--acc);letter-spacing:-1px;line-height:1.1}
@@ -174,9 +180,8 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
   <div class="card">
     <h2>Trip fuel estimate</h2>
     <div class="grid">
-      <div class="full"><label for="from">From</label><div class="pinrow"><input id="from" placeholder="e.g. Makati" autocomplete="off" list="places"><a class="btn tile" id="pin-from" target="_blank" rel="noopener" aria-label="Search on Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
-      <div class="full"><label for="to">To</label><div class="pinrow"><input id="to" placeholder="e.g. Baguio" autocomplete="off" list="places"><a class="btn tile" id="pin-to" target="_blank" rel="noopener" aria-label="Search on Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
-      <datalist id="places"></datalist>
+      <div class="full"><label for="from">From</label><div class="pinrow"><div class="acwrap"><input id="from" placeholder="e.g. Makati" autocomplete="off" autocapitalize="words" spellcheck="false"><div class="ac" id="ac-from" hidden></div></div><a class="btn tile" id="pin-from" target="_blank" rel="noopener" aria-label="Search on Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
+      <div class="full"><label for="to">To</label><div class="pinrow"><div class="acwrap"><input id="to" placeholder="e.g. Baguio" autocomplete="off" autocapitalize="words" spellcheck="false"><div class="ac" id="ac-to" hidden></div></div><a class="btn tile" id="pin-to" target="_blank" rel="noopener" aria-label="Search on Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
       <div class="full"><button class="btn pri" id="find" style="width:100%">Find distance</button><div class="msg" id="find-msg"></div></div>
       <div><label for="km">One-way km</label><input id="km" type="number" inputmode="decimal" min="0" placeholder="auto or type"></div>
       <div><label for="traffic">Traffic</label><select id="traffic"></select></div>
@@ -242,7 +247,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
     <h2>Install on your phone</h2>
     <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
-  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 10 · 13 Nov 2026</div>
+  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 11 · 13 Nov 2026</div>
 </section>
 </div>
 
@@ -391,9 +396,56 @@ function fillTraffic(){
   const cur=$('#traffic').value||'3',s=data.settings;
   $('#traffic').innerHTML=[['1','Free flow (×1)'],['2','Moderate (×'+s.m1+')'],['3','Heavy (×'+s.m2+')'],['4','Severe (×'+s.m3+')']].map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
 }
-function fillPlaces(){
-  const set=new Set();live('routes').forEach(r=>{set.add(r.from);set.add(r.to)});
-  $('#places').innerHTML=[...set].sort().map(p=>`<option value="${esc(p)}">`).join('');
+function fillPlaces(){}
+const sel={from:null,to:null},acCache=new Map();
+async function suggest(q,signal){
+  const k=q.toLowerCase();if(acCache.has(k))return acCache.get(k);
+  const r=await fetch('https://photon.komoot.io/api/?lang=en&limit=6&bbox=116.9,4.5,126.7,21.2&q='+enc(q),{signal});
+  if(!r.ok)throw new Error('suggest '+r.status);
+  const j=await r.json(),seen=new Set(),out=[];
+  for(const f of j.features||[]){
+    const p=f.properties||{};if(p.countrycode&&p.countrycode!=='PH')continue;
+    const c=f.geometry&&f.geometry.coordinates;if(!c||!p.name)continue;
+    const sub=[p.county||p.city||p.district,p.state].filter((x,i,a)=>x&&a.indexOf(x)===i&&x!==p.name).join(', ');
+    const label=sub?p.name+', '+sub:p.name;
+    if(seen.has(label.toLowerCase()))continue;seen.add(label.toLowerCase());
+    out.push({title:p.name,sub,label,lat:+c[1],lon:+c[0]});
+    if(out.length===3)break;
+  }
+  acCache.set(k,out);return out;
+}
+function setupAutocomplete(w){
+  const inp=$('#'+w),box=$('#ac-'+w);let timer,ctl,seq=0,hideT;
+  const hide=()=>{box.hidden=true;box.innerHTML=''};
+  const show=items=>{
+    if(!items.length){hide();return}
+    box.innerHTML=items.map((x,i)=>`<button type="button" data-i="${i}"><b>${esc(x.title)}</b>${x.sub?`<small>${esc(x.sub)}</small>`:''}</button>`).join('');
+    box.hidden=false;
+    box.querySelectorAll('button').forEach(b=>{
+      const pick=e=>{e.preventDefault();const x=items[+b.dataset.i];inp.value=x.label;sel[w]=x.lat!=null?{lat:x.lat,lon:x.lon,name:x.label,label:x.label}:null;hide();
+        inp.dispatchEvent(new Event('input',{bubbles:true}));sel[w]=x.lat!=null?{lat:x.lat,lon:x.lon,name:x.label,label:x.label}:null;inp.dispatchEvent(new Event('change',{bubbles:true}))};
+      b.addEventListener('mousedown',pick);b.addEventListener('touchstart',pick,{passive:false});
+    });
+  };
+  inp.addEventListener('input',()=>{
+    sel[w]=null;clearTimeout(timer);if(ctl)ctl.abort();
+    const q=inp.value.trim();if(q.length<3){hide();return}
+    const my=++seq;
+    const saved=[...new Set(live('routes').flatMap(r=>[r.from,r.to]))].filter(p=>p.toLowerCase().includes(q.toLowerCase())).slice(0,3).map(p=>({title:p,sub:'Saved place',label:p}));
+    if(saved.length)show(saved);
+    timer=setTimeout(async()=>{
+      if(!navigator.onLine)return;
+      ctl=new AbortController();
+      try{
+        const res=await suggest(q,ctl.signal);
+        if(my!==seq)return;
+        const labels=new Set(saved.map(x=>x.label.toLowerCase()));
+        show(saved.concat(res.filter(x=>!labels.has(x.label.toLowerCase()))).slice(0,3));
+      }catch(e){if(my===seq&&!saved.length)hide()/* silent: Find distance still works via Nominatim */}
+    },350);
+  });
+  inp.addEventListener('blur',()=>{clearTimeout(hideT);hideT=setTimeout(hide,250)});
+  inp.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
 }
 const slug=(a,b)=>(a+'__'+b).toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,100);
 function savedRoute(f,t){f=f.toLowerCase();t=t.toLowerCase();return live('routes').find(r=>(r.from.toLowerCase()===f&&r.to.toLowerCase()===t)||(r.from.toLowerCase()===t&&r.to.toLowerCase()===f))}
@@ -412,7 +464,9 @@ async function findDistance(){
   if(!navigator.onLine){m.className='msg err';m.textContent='No internet — type the km yourself.';return}
   const btn=$('#find');btn.disabled=true;m.className='msg';m.textContent='Looking up places…';
   try{
-    const a=await geocode(f);await sleep(1100);const b=await geocode(t);
+    const ok=w=>sel[w]&&sel[w].label===(w==='from'?f:t)?sel[w]:null;
+    const sa=ok('from'),sb=ok('to');
+    const a=sa||await geocode(f);if(!sa&&!sb)await sleep(1100);const b=sb||await geocode(t);
     m.textContent='Calculating road distance…';
     const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`);
     const j=await r.json();if(!j.routes||!j.routes[0])throw new Error('No road route found between those places.');
@@ -425,6 +479,7 @@ async function findDistance(){
   btn.disabled=false;
 }
 function bindCalc(){
+  setupAutocomplete('from');setupAutocomplete('to');
   ['km','extra','traffic','round','from','to'].forEach(id=>$('#'+id).addEventListener('input',calc));
   ['from','to'].forEach(id=>$('#'+id).addEventListener('change',()=>{const f=$('#from').value.trim(),t=$('#to').value.trim();if(f&&t){const sv=savedRoute(f,t);if(sv){$('#km').value=sv.km;calc()}}}));
   $('#find').onclick=findDistance;
