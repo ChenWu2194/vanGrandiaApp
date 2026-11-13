@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f6b5c">
+<meta name="theme-color" content="#3d63f5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Van Desk">
@@ -13,100 +13,116 @@
 <link rel="icon" href="icon-192.png">
 <title>Grandia Van Rental Desk</title>
 <style>
-:root{--bg:#f4f3ee;--card:#fff;--ink:#1d2326;--mut:#667075;--line:#e3e1da;--acc:#0f6b5c;--acc2:#e6f2ef;--red:#b3402f;--redbg:#fbeae6;--amb:#8a5f00;--ambbg:#fdf1d3;--grn:#1e7a46;--grnbg:#e1f3e8;--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom)}
-@media (prefers-color-scheme:dark){:root{--bg:#111517;--card:#1b2124;--ink:#ecebe6;--mut:#98a3a8;--line:#2c3539;--acc:#4cc2ad;--acc2:#1a2c29;--red:#ee8a78;--redbg:#3a211c;--amb:#e6b650;--ambbg:#3a2f15;--grn:#6fd09a;--grnbg:#163024}}
+:root{--bg:#f3f4f9;--card:#fff;--field:#f3f4f9;--ink:#1b2133;--mut:#8a91a8;--line:#eceef5;--acc:#3d63f5;--acc2:#edf0ff;--hd:#3d63f5;--red:#d6453d;--redbg:#fdecea;--amb:#b97c00;--ambbg:#fff4d6;--grn:#1b9a66;--grnbg:#e3f6ed;--shadow:0 8px 24px rgba(52,72,150,.09);--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom)}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1120;--card:#171b2e;--field:#202540;--ink:#eef0f8;--mut:#8e96b3;--line:#232843;--acc:#7d97ff;--acc2:#222a4d;--hd:#2a3a8c;--red:#ff8d84;--redbg:#3b2024;--amb:#f0bb55;--ambbg:#3a2f16;--grn:#5fd3a0;--grnbg:#14302a;--shadow:0 8px 24px rgba(0,0,0,.35)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:calc(76px + var(--sab));overscroll-behavior-y:contain}
-.top{background:var(--acc);color:#fff;padding:calc(10px + var(--sat)) 16px 10px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
-@media (prefers-color-scheme:dark){.top{color:#0b1412}}
-.top h1{font-size:17px;margin:0;flex:1}
-#sync{border:0;border-radius:14px;padding:5px 11px;font:inherit;font-size:12px;background:rgba(255,255,255,.22);color:inherit;min-height:30px}
-.wrap{max-width:720px;margin:0 auto;padding:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-.card h2{font-size:15px;margin:0 0 10px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(96px + var(--sab));overscroll-behavior-y:contain}
+.top{background:var(--hd);color:#fff;padding:calc(18px + var(--sat)) 20px 56px;border-radius:0 0 30px 30px;display:flex;align-items:center;gap:12px}
+.top .eyebrow{font-size:12px;opacity:.75;letter-spacing:.3px}
+.top h1{font-size:24px;margin:0;font-weight:700;letter-spacing:-.3px;line-height:1.15}
+.top>div{flex:1}
+#sync{border:0;border-radius:20px;padding:7px 13px;font:inherit;font-size:12px;font-weight:600;background:rgba(255,255,255,.2);color:#fff;min-height:34px;max-width:55%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrap{max-width:640px;margin:-34px auto 0;padding:0 16px;position:relative}
+.card{background:var(--card);border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h2{font-size:16px;margin:0 0 14px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .full{grid-column:1/-1}
-label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
-input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
-textarea{min-height:60px}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
-.btn{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
-.btn.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
-@media (prefers-color-scheme:dark){.btn.pri{color:#0b1412}}
-.btn.danger{color:var(--red);border-color:var(--red)}
-.btn.sm{min-height:36px;padding:6px 12px;font-size:14px}
+.grid>*,.pay>*{min-width:0}
+input[type=date]{min-width:0;max-width:100%}
+label{display:block;font-size:12px;color:var(--mut);margin:0 0 5px 2px;font-weight:500}
+input,select,textarea{width:100%;font:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--field);border:0;border-radius:14px;padding:12px 14px;min-height:48px;appearance:none;-webkit-appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238a91a8' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
+textarea{min-height:64px;resize:vertical}
+input::placeholder,textarea::placeholder{color:var(--mut);font-weight:400}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:0}
+input[type=checkbox]{appearance:auto;-webkit-appearance:auto;accent-color:var(--acc)}
+.btn{font:inherit;font-size:15px;font-weight:600;border:0;background:var(--acc2);color:var(--acc);padding:12px 18px;border-radius:14px;cursor:pointer;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn.pri{background:var(--acc);color:#fff;box-shadow:0 6px 16px rgba(61,99,245,.32)}
+@media (prefers-color-scheme:dark){.btn.pri{color:#0b1020;box-shadow:none}}
+.btn.danger{background:var(--redbg);color:var(--red)}
+.btn.sm{min-height:38px;padding:7px 14px;font-size:14px;border-radius:12px}
 .btn:disabled{opacity:.5}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn svg,.tile svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row>.btn{flex:1}
 .sp{flex:1}
-.pinrow{display:flex;gap:6px}.pinrow input{flex:1}.pinrow a{flex:0 0 44px;padding:0}
-.result{background:var(--acc2);border-radius:12px;padding:14px;margin-top:12px}
-.big{font-size:34px;font-weight:700;color:var(--acc);letter-spacing:-.5px;line-height:1.1}
-.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.kv span{display:block;font-size:12px;color:var(--mut)}.kv b{font-size:16px}
-.chk{display:flex;align-items:center;gap:10px;min-height:44px}.chk input{width:22px;min-height:22px;height:22px}.chk label{margin:0;font-size:15px;color:var(--ink)}
-.note{font-size:12px;color:var(--mut);margin-top:8px}
+.pinrow{display:flex;gap:8px}.pinrow input{flex:1;min-width:0}
+.tile{flex:0 0 48px;width:48px;padding:0!important}
+.result{background:var(--acc2);border-radius:18px;padding:16px;margin-top:14px}
+.big{font-size:36px;font-weight:700;color:var(--acc);letter-spacing:-1px;line-height:1.1}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.kv span{display:block;font-size:12px;color:var(--mut)}.kv b{font-size:16px;font-weight:650}
+.chk{display:flex;align-items:center;gap:10px;min-height:48px;padding-left:2px}.chk input{width:22px;height:22px;min-height:22px;padding:0}.chk label{margin:0;font-size:15px;color:var(--ink)}
+.note{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5}
 .msg{font-size:13px;margin-top:8px;color:var(--mut)}.msg.err{color:var(--red)}.msg.ok{color:var(--grn)}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.stat span{font-size:12px;color:var(--mut);display:block}.stat b{font-size:19px}
-.cal-h{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-.cal-h b{flex:1;text-align:center}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.dow{background:var(--bg);text-align:center;font-size:11px;color:var(--mut);padding:4px 0}
-.day{background:var(--card);min-height:62px;padding:3px;cursor:pointer;overflow:hidden}
-.day.out{opacity:.4}.day.sel{outline:2px solid var(--acc);outline-offset:-2px}
-.day.today .n{background:var(--acc);color:#fff;border-radius:10px;padding:0 6px}
-@media (prefers-color-scheme:dark){.day.today .n{color:#0b1412}}
-.n{font-size:12px;color:var(--mut);display:inline-block;margin-bottom:3px}
-.chip{display:block;font-size:11px;padding:1px 4px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:18px 20px}
+.stat span{font-size:12px;color:var(--mut);display:block}.stat b{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.cal-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.cal-h b{flex:1;text-align:center;font-size:16px}
+.cal-h .btn{min-width:40px;padding:0 12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dow{text-align:center;font-size:11px;color:var(--mut);padding:6px 0;font-weight:500}
+.day{min-height:54px;padding:3px 2px;cursor:pointer;overflow:hidden;text-align:center;border-radius:14px}
+.day.out{opacity:.3}
+.n{display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:50%;font-size:14px;font-weight:500;margin-bottom:2px}
+.day.today .n{box-shadow:inset 0 0 0 1.5px var(--acc);color:var(--acc);font-weight:700}
+.day.sel .n{background:var(--acc);color:#fff;box-shadow:none;font-weight:700}
+@media (prefers-color-scheme:dark){.day.sel .n{color:#0b1020}}
+.chip{display:block;font-size:10px;padding:1px 5px;border-radius:6px;margin:0 2px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;font-weight:600}
 .chip.paid{background:var(--grnbg);color:var(--grn)}.chip.part{background:var(--ambbg);color:var(--amb)}.chip.unpaid{background:var(--redbg);color:var(--red)}
-.chip.pending{border:1px dashed currentColor}
-@media (max-width:600px){.chip{font-size:0;height:6px;padding:0;border-radius:3px;background:currentColor!important;border:0!important}.chip.pending{opacity:.45}}
-.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-top:8px;color:var(--mut)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
-.bk{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer}
-.bk .t{display:flex;gap:8px;align-items:center}.bk .t b{flex:1}
-.bk .s{font-size:13px;color:var(--mut);margin-top:2px}
-.tag{font-size:12px;padding:2px 9px;border-radius:10px;white-space:nowrap}
+.chip.pending{opacity:.55}
+@media (max-width:600px){.chip{font-size:0;height:4px;padding:0;border-radius:2px;margin:0 7px 3px;background:currentColor!important}}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-top:10px;color:var(--mut);justify-content:center}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.bk{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card);border:0;border-radius:20px;padding:15px 16px;margin-bottom:12px;cursor:pointer;box-shadow:var(--shadow)}
+.bk .t{display:flex;gap:8px;align-items:center}.bk .t b{flex:1;font-size:16px}
+.bk .s{font-size:13px;color:var(--mut);margin-top:3px}
+.tag{font-size:12px;font-weight:600;padding:3px 10px;border-radius:12px;white-space:nowrap}
 .tag.paid{background:var(--grnbg);color:var(--grn)}.tag.part{background:var(--ambbg);color:var(--amb)}.tag.unpaid{background:var(--redbg);color:var(--red)}.tag.cancel{background:var(--line);color:var(--mut)}
-h3.sec{font-size:13px;color:var(--mut);margin:14px 2px 8px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:8px}
-h3.sec select{width:auto;min-height:34px;padding:4px 8px;font-size:14px;margin-left:auto;text-transform:none;letter-spacing:0}
-.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:var(--sab);z-index:6}
-.tabbar button{flex:1;background:none;border:0;padding:8px 0 6px;font:inherit;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px}
-.tabbar button span{font-size:20px;line-height:1}
+h3.sec{font-size:14px;color:var(--ink);margin:18px 4px 10px;font-weight:700;display:flex;align-items:center;gap:8px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:26px 26px 0 0;box-shadow:0 -6px 24px rgba(52,72,150,.1);display:grid;grid-template-columns:1fr 1fr 84px 1fr 1fr;padding:8px 6px calc(8px + var(--sab));z-index:6;max-width:640px;margin:0 auto}
+.tabbar button{background:none;border:0;font:inherit;font-size:11px;font-weight:500;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;justify-content:center;cursor:pointer}
+.tabbar button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabbar button.on{color:var(--acc);font-weight:600}
-.fab{position:fixed;right:16px;bottom:calc(72px + var(--sab));width:56px;height:56px;border-radius:28px;background:var(--acc);color:#fff;border:0;font-size:30px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:6}
-@media (prefers-color-scheme:dark){.fab{color:#0b1412}}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--card);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + var(--sab));-webkit-overflow-scrolling:touch}
-@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:18px}}
-.sheet h3{margin:0 0 12px;font-size:17px}
-.warn{background:var(--redbg);color:var(--red);padding:9px 12px;border-radius:10px;font-size:13px;margin:10px 0}
-.pay{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px}
+.tabbar button.plus{width:60px;height:60px;min-height:60px;border-radius:50%;background:var(--acc);color:#fff;justify-self:center;margin-top:-30px;border:5px solid var(--bg);box-shadow:0 8px 18px rgba(61,99,245,.4);padding:0}
+@media (prefers-color-scheme:dark){.tabbar button.plus{color:#0b1020;box-shadow:none}}
+.tabbar button.plus svg{width:26px;height:26px;stroke-width:2.2}
+.modal{position:fixed;inset:0;background:rgba(14,20,40,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:28px 28px 0 0;padding:22px 18px calc(18px + var(--sab));-webkit-overflow-scrolling:touch;position:relative}
+.sheet::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-12px auto 14px}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:28px}}
+.sheet h3{margin:0 0 14px;font-size:18px}
+.warn{background:var(--redbg);color:var(--red);padding:10px 14px;border-radius:14px;font-size:13px;margin:10px 0}
+.pay{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px}
 .pay input[data-k=note]{grid-column:1/3}
-.banner{background:var(--ambbg);color:var(--amb);padding:9px 12px;border-radius:10px;margin-bottom:10px;font-size:13px}
-.links{display:flex;gap:8px;margin-top:10px}.links .btn{flex:1;font-size:14px}
-ol.steps{padding-left:20px;margin:6px 0;font-size:14px}ol.steps li{margin-bottom:6px}
-code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:12px}
+.banner{background:var(--ambbg);color:var(--amb);padding:11px 14px;border-radius:16px;margin-bottom:14px;font-size:13px;font-weight:500}
+.links{display:flex;gap:10px;margin-top:14px}.links .btn{flex:1;font-size:14px}
+.pagebar{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px}
+.pagebar b{flex:1;font-size:16px}.pagebar select{width:auto;min-height:40px;font-size:14px}
+ol.steps{padding-left:20px;margin:8px 0;font-size:14px}ol.steps li{margin-bottom:6px}
+details summary{color:var(--acc);font-weight:600;list-style:none}
+code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
 </style>
 </head>
 <body>
-<div class="top"><h1>🚐 Grandia Van Desk</h1><button id="sync">…</button></div>
+<header class="top"><div><div class="eyebrow">Grandia · 2015</div><h1>Van Desk</h1></div><button id="sync">…</button></header>
 <div class="wrap">
 <div id="banner"></div>
 
 <section id="tab-cal">
-  <div class="stats" id="stats"></div>
+  <div class="card stats" id="stats"></div>
   <div class="card">
     <div class="cal-h"><button class="btn sm" id="prev" aria-label="Previous month">‹</button><b id="mlabel"></b><button class="btn sm" id="today">Today</button><button class="btn sm" id="next" aria-label="Next month">›</button></div>
     <div class="cal" id="cal"></div>
-    <div class="legend"><span><i style="background:var(--grn)"></i>Paid</span><span><i style="background:var(--amb)"></i>Partly paid</span><span><i style="background:var(--red)"></i>Unpaid</span><span>Faded/dashed = pending</span></div>
+    <div class="legend"><span><i style="background:var(--grn)"></i>Paid</span><span><i style="background:var(--amb)"></i>Partly paid</span><span><i style="background:var(--red)"></i>Unpaid</span><span>Faded = pending</span></div>
   </div>
   <h3 class="sec" id="daytitle"></h3>
   <div id="daylist"></div>
-  <h3 class="sec">All bookings <select id="filter"><option value="up">Upcoming</option><option value="unpaid">Balance due</option><option value="all">Everything</option></select></h3>
+</section>
+
+<section id="tab-list" hidden>
+  <div class="card pagebar"><b>Bookings</b><select id="filter"><option value="up">Upcoming</option><option value="unpaid">Balance due</option><option value="all">Everything</option></select></div>
   <div id="list"></div>
 </section>
 
@@ -114,16 +130,15 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:12px}
   <div class="card">
     <h2>Trip fuel estimate</h2>
     <div class="grid">
-      <div class="full"><label for="from">From</label><div class="pinrow"><input id="from" placeholder="e.g. Makati" autocomplete="off" list="places"><a class="btn" id="pin-from" target="_blank" rel="noopener" title="Search on Google Maps">📍</a></div></div>
-      <div class="full"><label for="to">To</label><div class="pinrow"><input id="to" placeholder="e.g. Baguio" autocomplete="off" list="places"><a class="btn" id="pin-to" target="_blank" rel="noopener" title="Search on Google Maps">📍</a></div></div>
+      <div class="full"><label for="from">From</label><div class="pinrow"><input id="from" placeholder="e.g. Makati" autocomplete="off" list="places"><a class="btn tile" id="pin-from" target="_blank" rel="noopener" aria-label="Search on Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
+      <div class="full"><label for="to">To</label><div class="pinrow"><input id="to" placeholder="e.g. Baguio" autocomplete="off" list="places"><a class="btn tile" id="pin-to" target="_blank" rel="noopener" aria-label="Search on Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
       <datalist id="places"></datalist>
-      <div class="full"><button class="btn pri" id="find" style="width:100%">🔎 Find distance automatically</button><div class="msg" id="find-msg"></div></div>
+      <div class="full"><button class="btn pri" id="find" style="width:100%">Find distance</button><div class="msg" id="find-msg"></div></div>
       <div><label for="km">One-way km</label><input id="km" type="number" inputmode="decimal" min="0" placeholder="auto or type"></div>
       <div><label for="traffic">Traffic</label><select id="traffic"></select></div>
-      <div class="chk"><input id="round" type="checkbox" checked><label for="round">Round trip (×2)</label></div>
+      <div class="chk"><input id="round" type="checkbox" checked><label for="round">Round trip</label></div>
       <div><label for="extra">Extra km</label><input id="extra" type="number" inputmode="decimal" min="0" value="0"></div>
     </div>
-    <div class="links"><a class="btn" id="g-dir" target="_blank" rel="noopener">🗺 Google Maps route</a><a class="btn" id="g-search" target="_blank" rel="noopener">🔍 Google Search</a></div>
     <div class="result">
       <div class="note" style="margin:0 0 2px">Estimated fuel cost</div>
       <div class="big" id="r-cost">₱0</div>
@@ -134,15 +149,16 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:12px}
         <div><span>Diesel price</span><b id="r-p">₱100/L</b></div>
       </div>
       <div class="note" id="r-time"></div>
-      <div class="row" style="margin-top:12px"><button class="btn pri" id="to-book">Add to new booking</button></div>
     </div>
-    <div class="note">Distance and the place search come from OpenStreetMap (road distance, free). The Google buttons open Google Maps / Search in a new tab so you can double-check the route. You can always type the km yourself.</div>
+    <div class="links"><a class="btn" id="g-dir" target="_blank" rel="noopener">Google Maps</a><a class="btn" id="g-search" target="_blank" rel="noopener">Google Search</a></div>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="to-book">Add to new booking</button></div>
+    <div class="note">Distance comes from OpenStreetMap (road distance). The Google buttons open the route or a search in a new tab so you can double-check. You can always type the km yourself.</div>
   </div>
 </section>
 
 <section id="tab-set" hidden>
   <div class="card">
-    <h2>Fuel assumptions (shared)</h2>
+    <h2>Fuel assumptions</h2>
     <div class="grid">
       <div><label for="s-price">Diesel ₱ / litre</label><input id="s-price" type="number" inputmode="decimal" step="0.5"></div>
       <div><label for="s-base">Free-flow km/L</label><input id="s-base" type="number" inputmode="decimal" step="0.1"></div>
@@ -150,43 +166,44 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:12px}
       <div><label for="s-m2">Heavy traffic ×</label><input id="s-m2" type="number" inputmode="decimal" step="0.05"></div>
       <div><label for="s-m3">Severe traffic ×</label><input id="s-m3" type="number" inputmode="decimal" step="0.05"></div>
     </div>
-    <div class="row" style="margin-top:10px"><button class="btn pri" id="save-set">Save for everyone</button></div>
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="save-set">Save for everyone</button></div>
     <div class="msg" id="set-msg"></div>
     <div class="note">“×” = how much more fuel is used than in free flow. Defaults: ₱100/L, 9 km/L, severe = 2× (≈4.5 km/L). Compare with real refuels and adjust.</div>
   </div>
 
   <div class="card">
-    <h2>Shared database (GitHub)</h2>
-    <div id="sync-info" class="note" style="margin:0 0 10px"></div>
+    <h2>Shared database</h2>
+    <div id="sync-info" class="note" style="margin:0 0 12px"></div>
     <div class="grid">
       <div class="full"><label for="c-repo">Data repository (owner/name)</label><input id="c-repo" placeholder="ChenWu2194/VanGrandia" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
       <div class="full"><label for="c-token">Access token</label><input id="c-token" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
     </div>
-    <div class="row" style="margin-top:10px"><button class="btn pri" id="c-save">Connect &amp; sync</button><button class="btn" id="c-now">Sync now</button></div>
-    <div class="row" style="margin-top:8px"><button class="btn danger sm" id="c-off">Disconnect this phone</button></div>
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="c-save">Connect &amp; sync</button><button class="btn" id="c-now">Sync now</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn danger sm" id="c-off">Disconnect this phone</button></div>
     <div class="msg" id="c-msg"></div>
-    <details style="margin-top:10px"><summary class="note" style="cursor:pointer">How to get the token</summary>
+    <details style="margin-top:12px"><summary class="note" style="cursor:pointer">How to get the token</summary>
       <ol class="steps">
         <li>GitHub → profile photo → <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
         <li>Repository access: <b>Only select repositories</b> → pick the data repo.</li>
         <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
-        <li>Copy the token and paste it above. Each teammate does this once on their own phone (or share your token privately).</li>
+        <li>Copy the token and paste it above. Each teammate does this once on their own phone.</li>
       </ol>
     </details>
   </div>
 
   <div class="card">
     <h2>Install on your phone</h2>
-    <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app / Add to Home screen.<br><b>iPhone (Safari):</b> Share button → Add to Home Screen.<br>Bookings you view are kept on the phone, so the app still opens without signal. Changes made offline upload when you're back online.</div>
+    <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
 </section>
 </div>
 
-<button class="fab" id="fab" aria-label="New booking">+</button>
 <nav class="tabbar">
-  <button data-tab="cal" class="on"><span>📅</span>Calendar</button>
-  <button data-tab="fuel"><span>⛽</span>Fuel</button>
-  <button data-tab="set"><span>⚙️</span>Settings</button>
+  <button data-tab="cal" class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>Calendar</button>
+  <button data-tab="list"><svg viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17.5" r="1"/></svg>Bookings</button>
+  <button class="plus" id="fab" aria-label="New booking"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-tab="fuel"><svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20M4 20h11M14 9h2.2a1.8 1.8 0 0 1 1.8 1.8v5.2a1.5 1.5 0 0 0 3 0V8l-3-3M7.5 8h3"/></svg>Fuel</button>
+  <button data-tab="set"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Settings</button>
 </nav>
 <div id="modal-root"></div>
 
@@ -428,11 +445,11 @@ function openBooking(id,pre){
      <h3>${ex?'Edit booking':'New booking'}</h3>
      <div class="grid">
       <div class="full"><label>Customer</label><input id="f-customer" value="${esc(b.customer)}"></div>
-      <div class="full"><label>Phone</label><div class="pinrow"><input id="f-phone" type="tel" inputmode="tel" value="${esc(b.phone||'')}"><a class="btn" id="call" href="tel:${esc((b.phone||'').replace(/[^+\d]/g,''))}" title="Call">📞</a></div></div>
+      <div class="full"><label>Phone</label><div class="pinrow"><input id="f-phone" type="tel" inputmode="tel" value="${esc(b.phone||'')}"><a class="btn tile" id="call" href="tel:${esc((b.phone||'').replace(/[^+\d]/g,''))}" aria-label="Call"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></a></div></div>
       <div><label>First day</label><input id="f-start" type="date" value="${b.start}"></div>
       <div><label>Last day</label><input id="f-end" type="date" value="${b.end}"></div>
       <div class="full"><label>Status</label><select id="f-status"><option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option></select></div>
-      <div class="full"><label>Route / destination</label><div class="pinrow"><input id="f-route" value="${esc(b.route||'')}"><a class="btn" id="f-map" target="_blank" rel="noopener" title="Open in Google Maps">📍</a></div></div>
+      <div class="full"><label>Route / destination</label><div class="pinrow"><input id="f-route" value="${esc(b.route||'')}"><a class="btn tile" id="f-map" target="_blank" rel="noopener" aria-label="Open in Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
       <div><label>Rental fee ₱</label><input id="f-rental" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>
       <div><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>
       <div class="full"><label>Other (driver, toll…) ₱</label><input id="f-other" type="number" inputmode="decimal" min="0" value="${esc(b.other)}"></div>
@@ -486,12 +503,11 @@ function openBooking(id,pre){
 /* ---------------- wiring ---------------- */
 function showTab(t){
   document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  ['cal','fuel','set'].forEach(x=>$('#tab-'+x).hidden=x!==t);
-  $('#fab').hidden=t!=='cal';
+  ['cal','list','fuel','set'].forEach(x=>$('#tab-'+x).hidden=x!==t);
   scrollTo(0,0);
   if(t==='set'){fillSettings(true);status()}
 }
-document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $('#prev').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);renderStats();renderCal()};
 $('#next').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);renderStats();renderCal()};
 $('#today').onclick=()=>{const n=new Date();S.month=new Date(n.getFullYear(),n.getMonth(),1);S.sel=todayS;render()};
