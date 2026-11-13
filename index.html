@@ -105,6 +105,9 @@ html.dark .tabbar button.plus{color:#0b1020;box-shadow:none}
 .install{display:flex;align-items:center;gap:12px;padding:14px 16px}
 .install .txt{flex:1;font-size:14px;line-height:1.4}.install .txt b{display:block;font-size:15px;margin-bottom:2px}
 .install .x{background:none;border:0;color:var(--mut);font-size:24px;padding:4px 8px;cursor:pointer;line-height:1}
+.total-line{display:flex;justify-content:space-between;align-items:baseline;margin:16px 2px 6px;font-size:15px;color:var(--mut)}.total-line b{font-size:24px;color:var(--ink);letter-spacing:-.4px}
+.sheet details{margin-top:10px;background:var(--field);border-radius:14px;padding:12px 14px}.sheet details summary{cursor:pointer;font-size:14px}
+.sheet details .grid input{background:var(--card)}
 .links{display:flex;gap:10px;margin-top:14px}.links .btn{flex:1;font-size:14px}
 .pagebar{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px}
 .pagebar b{flex:1;font-size:16px}.pagebar select{width:auto;min-height:40px;font-size:14px}
@@ -181,7 +184,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
       <div><label for="extra">Extra km</label><input id="extra" type="number" inputmode="decimal" min="0" value="0"></div>
     </div>
     <div class="result">
-      <div class="note" style="margin:0 0 2px">Estimated fuel cost</div>
+      <div class="note" style="margin:0 0 2px">Estimated fuel cost · rounded up to ₱100</div>
       <div class="big" id="r-cost">₱0</div>
       <div class="kv">
         <div><span>Total distance</span><b id="r-dist">0 km</b></div>
@@ -199,17 +202,21 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
 
 <section id="tab-set" hidden>
   <div class="card">
-    <h2>Fuel assumptions</h2>
+    <h2>Fees &amp; fuel assumptions</h2>
     <div class="grid">
       <div><label for="s-price">Diesel ₱ / litre</label><input id="s-price" type="number" inputmode="decimal" step="0.5"></div>
       <div><label for="s-base">Free-flow km/L</label><input id="s-base" type="number" inputmode="decimal" step="0.1"></div>
       <div><label for="s-m1">Moderate traffic ×</label><input id="s-m1" type="number" inputmode="decimal" step="0.05"></div>
       <div><label for="s-m2">Heavy traffic ×</label><input id="s-m2" type="number" inputmode="decimal" step="0.05"></div>
       <div><label for="s-m3">Severe traffic ×</label><input id="s-m3" type="number" inputmode="decimal" step="0.05"></div>
+      <div><label for="s-rper">Van rental ₱</label><input id="s-rper" type="number" inputmode="decimal" step="50"></div>
+      <div><label for="s-rblock">…per ₱ of fuel</label><input id="s-rblock" type="number" inputmode="decimal" step="100"></div>
+      <div><label for="s-driver">Driver fee ₱ / day</label><input id="s-driver" type="number" inputmode="decimal" step="50"></div>
+      <div><label for="s-from">Default starting point</label><input id="s-from"></div>
     </div>
     <div class="row" style="margin-top:14px"><button class="btn pri" id="save-set">Save for everyone</button></div>
     <div class="msg" id="set-msg"></div>
-    <div class="note">“×” = how much more fuel is used than in free flow. Defaults: ₱100/L, 9 km/L, severe = 2× (≈4.5 km/L). Compare with real refuels and adjust.</div>
+    <div class="note">“×” = how much more fuel is used than in free flow (severe = 2× ≈ 4.5 km/L). Van rental is added automatically to every booking (₱1,000 per ₱2,000 of fuel) plus the driver fee per day. Fuel is always rounded up to the next ₱100.</div>
   </div>
 
   <div class="card">
@@ -233,7 +240,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
     <h2>Install on your phone</h2>
     <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
-  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 8 · 13 Nov 2026</div>
+  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 9 · 13 Nov 2026</div>
 </section>
 </div>
 
@@ -266,13 +273,14 @@ const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 
 /* ---------------- data ---------------- */
-const DEF_SETTINGS={price:100,base:9,m1:1.25,m2:1.6,m3:2,updatedAt:0};
+const DEF_SETTINGS={price:100,base:9,m1:1.25,m2:1.6,m3:2,rentalPer:1000,rentalBlock:2000,driverDay:1500,from:'Cabanatuan City',updatedAt:0};
 const FILE='data.json';
 let data=lsGet('van.data',null)||{settings:{...DEF_SETTINGS},bookings:[],routes:[]};
 let cfg=lsGet('van.cfg',null);          // {repo, token}
 let welcome=false,deferred=null;
 let sha=null,syncing=false,needSync=false,lastSync=lsGet('van.last',null),syncErr='',lastCalc=null,timer=null;
 const S={month:new Date(),sel:todayS,filter:'up'};S.month.setDate(1);
+data.settings={...DEF_SETTINGS,...data.settings};
 const live=c=>data[c].filter(x=>!x.deleted);
 const persist=()=>lsSet('van.data',data);
 
@@ -285,6 +293,7 @@ function mergeData(a,b){
     for(const x of [...(b[c]||[]),...a[c]]){const o=m.get(x.id);if(!o||(x.updatedAt||0)>=(o.updatedAt||0))m.set(x.id,x)}
     out[c]=[...m.values()].filter(x=>!(x.deleted&&(x.updatedAt||0)<cutoff)).sort((p,q)=>p.id<q.id?-1:1);
   }
+  out.settings={...DEF_SETTINGS,...out.settings};
   return out;
 }
 function upsert(c,obj){obj.updatedAt=Date.now();data[c]=data[c].filter(x=>x.id!==obj.id);data[c].push(obj);persist();scheduleSync()}
@@ -361,14 +370,14 @@ const mult=l=>l==='1'?1:l==='2'?data.settings.m1:l==='3'?data.settings.m2:data.s
 function calc(){
   const s=data.settings,one=num($('#km').value),extra=num($('#extra').value);
   const dist=one*($('#round').checked?2:1)+extra;
-  const eco=s.base/mult($('#traffic').value),liters=eco>0?dist/eco:0,cost=liters*s.price;
-  $('#r-cost').textContent=peso(Math.round(cost));
+  const eco=s.base/mult($('#traffic').value),liters=eco>0?dist/eco:0,cost0=liters*s.price,cost=dist>0?Math.ceil(cost0/100-1e-9)*100:0;
+  $('#r-cost').textContent=peso(cost);
   $('#r-dist').textContent=Math.round(dist).toLocaleString()+' km';
   $('#r-eco').textContent=eco.toFixed(1)+' km/L';
   $('#r-l').textContent=liters.toFixed(1)+' L';
   $('#r-p').textContent=peso(s.price)+'/L';
   const f=$('#from').value.trim(),t=$('#to').value.trim();
-  lastCalc={route:f&&t?f+' → '+t+($('#round').checked?' (round trip)':''):'',km:Math.round(dist),fuel:Math.round(cost)};
+  lastCalc={route:f&&t?f+' → '+t+($('#round').checked?' (round trip)':''):'',km:Math.round(dist),fuel:cost};
   $('#pin-from').href='https://www.google.com/maps/search/?api=1&query='+enc(f);
   $('#pin-to').href='https://www.google.com/maps/search/?api=1&query='+enc(t);
   $('#g-dir').href='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+enc(f)+'&destination='+enc(t);
@@ -419,19 +428,19 @@ function bindCalc(){
 }
 function fillSettings(force){
   const s=data.settings;fillTraffic();
-  if(force||!$('#tab-set').contains(document.activeElement)){$('#s-price').value=s.price;$('#s-base').value=s.base;$('#s-m1').value=s.m1;$('#s-m2').value=s.m2;$('#s-m3').value=s.m3}
+  if(force||!$('#tab-set').contains(document.activeElement)){$('#s-price').value=s.price;$('#s-base').value=s.base;$('#s-m1').value=s.m1;$('#s-m2').value=s.m2;$('#s-m3').value=s.m3;$('#s-rper').value=s.rentalPer;$('#s-rblock').value=s.rentalBlock;$('#s-driver').value=s.driverDay;$('#s-from').value=s.from}
   calc();
 }
 $('#save-set').onclick=()=>{
-  const n={price:num($('#s-price').value),base:num($('#s-base').value),m1:num($('#s-m1').value),m2:num($('#s-m2').value),m3:num($('#s-m3').value)};
+  const n={price:num($('#s-price').value),base:num($('#s-base').value),m1:num($('#s-m1').value),m2:num($('#s-m2').value),m3:num($('#s-m3').value),rentalPer:num($('#s-rper').value),rentalBlock:num($('#s-rblock').value),driverDay:num($('#s-driver').value),from:$('#s-from').value.trim()};
   const m=$('#set-msg');
-  if(!(n.price>0&&n.base>0&&n.m1>0&&n.m2>0&&n.m3>0)){m.className='msg err';m.textContent='All values must be above 0.';return}
+  if(!(n.price>0&&n.base>0&&n.m1>0&&n.m2>0&&n.m3>0&&n.rentalBlock>0&&n.rentalPer>=0&&n.driverDay>=0)){m.className='msg err';m.textContent='All values must be above 0.';return}
   setSettings(n);fillSettings(true);m.className='msg ok';m.textContent='Saved'+(cfg?' — syncing to the team.':'.');
 };
 
 /* ---------------- bookings ---------------- */
 const paidOf=b=>(b.payments||[]).reduce((a,p)=>a+num(p.amount),0);
-const totalOf=b=>num(b.rental)+num(b.fuel)+num(b.other);
+const totalOf=b=>num(b.rental)+num(b.fuel)+num(b.other)+num(b.driverFee);
 const balOf=b=>totalOf(b)-paidOf(b);
 const active=b=>b.status!=='cancelled';
 function payState(b){if(!active(b))return'cancel';const t=totalOf(b),p=paidOf(b);return p>0&&p>=t?'paid':p>0?'part':'unpaid'}
@@ -461,7 +470,7 @@ function renderCal(){
 }
 function card(b){
   const st=payState(b),bal=Math.max(0,balOf(b));
-  return `<button class="bk" data-id="${esc(b.id)}"><div class="t"><b>${esc(b.customer)}</b><span class="tag ${st}">${payLabel[st]}</span></div>
+  return `<button class="bk" data-id="${esc(b.id)}"><div class="t"><b>${esc(b.customer||'No name')}</b><span class="tag ${st}">${payLabel[st]}</span></div>
    <div class="s">${fmt(b.start)}${b.end!==b.start?' – '+fmt(b.end):''} · ${nDays(b.start,b.end)} day${nDays(b.start,b.end)>1?'s':''}${b.status==='pending'?' · pending':''}${b.route?' · '+esc(b.route):''}</div>
    <div class="s">Total ${peso(totalOf(b))} · Paid ${peso(paidOf(b))}${active(b)&&bal>0?' · <b style="color:var(--red)">Due '+peso(bal)+'</b>':''}</div></button>`;
 }
@@ -480,8 +489,13 @@ function render(){renderStats();renderCal();renderLists();fillPlaces();fillSetti
 function openBooking(id,pre){
   const ex=id?data.bookings.find(b=>b.id===id&&!b.deleted):null;
   pre=pre||{};
-  const b=ex?JSON.parse(JSON.stringify(ex)):{id:'',customer:'',phone:'',start:pre.start||todayS,end:pre.start||todayS,route:pre.route||'',km:pre.km||'',rental:'',fuel:pre.fuel||'',other:'',status:'confirmed',payments:[],notes:''};
-  const root=$('#modal-root');
+  const b=ex?JSON.parse(JSON.stringify(ex)):{id:'',customer:'',phone:'',start:pre.start||todayS,end:pre.start||todayS,route:pre.route||'',km:pre.km||'',rental:'',fuel:pre.fuel||'',other:'',status:'confirmed',payments:[],notes:'',withDriver:true,driverFee:'',rentalManual:false,driverManual:false};
+  if(ex&&ex.withDriver===undefined){b.withDriver=false;b.rentalManual=true;b.driverManual=true;b.driverFee=b.driverFee||0} // older booking: keep its saved amounts
+  const root=$('#modal-root');let detOpen=false;
+  const auto=()=>{const s=data.settings;
+    if(!b.rentalManual)b.rental=s.rentalBlock>0?Math.round(num(b.fuel)*s.rentalPer/s.rentalBlock):0;
+    if(!b.driverManual)b.driverFee=b.withDriver?nDays(b.start,b.end)*s.driverDay:0};
+  auto();
   const draw=()=>{
     root.innerHTML=`<div class="modal"><div class="sheet">
      <h3>${ex?'Edit booking':'New booking'}</h3>
@@ -492,36 +506,56 @@ function openBooking(id,pre){
       <div><label>Last day</label><input id="f-end" type="date" value="${b.end}"></div>
       <div class="full"><label>Status</label><select id="f-status"><option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option></select></div>
       <div class="full"><label>Route / destination</label><div class="pinrow"><input id="f-route" value="${esc(b.route||'')}"><a class="btn tile" id="f-map" target="_blank" rel="noopener" aria-label="Open in Google Maps"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></a></div></div>
-      <div><label>Rental fee ₱</label><input id="f-rental" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>
-      <div><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>
-      <div class="full"><label>Other (driver, toll…) ₱</label><input id="f-other" type="number" inputmode="decimal" min="0" value="${esc(b.other)}"></div>
+      <div class="full"><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>
      </div>
      ${lastCalc&&lastCalc.fuel?`<button class="btn sm" id="f-uselast" style="margin-top:8px">Use fuel from calculator (${peso(lastCalc.fuel)})</button>`:''}
-     <div style="margin:10px 0 4px;text-align:right"><b id="f-total"></b></div>
-     <h3 style="margin:14px 0 8px;font-size:14px">Payments</h3>
+     <div class="total-line"><span>Total</span><b id="f-total"></b></div>
+     <details id="f-det" ${detOpen?'open':''}><summary>Fee breakdown (automatic)</summary>
+       <div class="grid" style="margin-top:12px">
+        <div><label>Van rental ₱</label><input id="f-rental" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>
+        <div><label>Driver fee ₱</label><input id="f-driverFee" type="number" inputmode="decimal" min="0" value="${esc(b.driverFee)}"></div>
+        <div class="chk full"><input id="f-withDriver" type="checkbox" ${b.withDriver?'checked':''}><label for="f-withDriver">With driver</label></div>
+        <div class="full"><label>Other ₱ (toll, extras…)</label><input id="f-other" type="number" inputmode="decimal" min="0" value="${esc(b.other)}"></div>
+       </div>
+       <div class="note" id="f-explain"></div>
+       <button class="btn sm" id="f-reset" style="margin-top:8px">Reset rental &amp; driver to automatic</button>
+     </details>
+     <h3 style="margin:16px 0 8px;font-size:14px">Payments</h3>
      <div id="f-pays"></div>
      <div class="row"><button class="btn sm" id="f-addpay" style="flex:0">+ Add payment</button><span class="sp"></span><span id="f-bal" style="text-align:right"></span></div>
      <div style="margin-top:12px"><label>Notes</label><textarea id="f-notes" rows="2">${esc(b.notes||'')}</textarea></div>
      <div id="f-warn"></div>
      <div class="row" style="margin-top:14px">${ex?'<button class="btn danger" id="f-del" style="flex:0 0 auto">Delete</button>':''}<button class="btn" id="f-cancel">Close</button><button class="btn pri" id="f-save">Save</button></div>
     </div></div>`;
-    drawPays();sums();mapLink();
-    ['customer','phone','start','end','status','route','rental','fuel','other','notes'].forEach(k=>$('#f-'+k).addEventListener('input',()=>{
+    drawPays();refresh();
+    ['customer','phone','start','end','status','route','fuel','notes','other'].forEach(k=>$('#f-'+k).addEventListener('input',()=>{
       b[k]=$('#f-'+k).value;
       if(k==='start'&&b.end<b.start){b.end=b.start;$('#f-end').value=b.end}
       if(k==='end'&&b.end<b.start){b.start=b.end;$('#f-start').value=b.start}
       if(k==='phone')$('#call').href='tel:'+b.phone.replace(/[^+\d]/g,'');
-      sums();checkOverlap();mapLink()}));
+      refresh()}));
+    $('#f-rental').addEventListener('input',()=>{b.rental=$('#f-rental').value;b.rentalManual=true;refresh()});
+    $('#f-driverFee').addEventListener('input',()=>{b.driverFee=$('#f-driverFee').value;b.driverManual=true;refresh()});
+    $('#f-withDriver').addEventListener('change',e=>{b.withDriver=e.target.checked;b.driverManual=false;refresh()});
+    $('#f-reset').onclick=()=>{b.rentalManual=false;b.driverManual=false;refresh()};
+    $('#f-det').addEventListener('toggle',()=>{detOpen=$('#f-det').open});
     const ul=$('#f-uselast');if(ul)ul.onclick=()=>{b.fuel=lastCalc.fuel;if(!b.route)b.route=lastCalc.route;if(!b.km)b.km=lastCalc.km;draw()};
     $('#f-addpay').onclick=()=>{b.payments.push({date:todayS,amount:'',note:''});drawPays();sums()};
     $('#f-cancel').onclick=()=>root.innerHTML='';
     $('.modal').addEventListener('click',e=>{if(e.target.classList.contains('modal'))root.innerHTML=''});
     $('#f-save').onclick=save;
     if(ex){let armed=false;$('#f-del').onclick=e=>{if(!armed){armed=true;e.target.textContent='Tap again';return}removeItem('bookings',ex.id);root.innerHTML='';render()}}
-    checkOverlap();
+  };
+  const refresh=()=>{
+    auto();
+    const set=(id,v)=>{const el=$(id);if(el&&document.activeElement!==el)el.value=v};
+    set('#f-rental',b.rental);set('#f-driverFee',b.driverFee);
+    const s=data.settings,d=nDays(b.start,b.end);
+    $('#f-explain').textContent='Rental '+peso(s.rentalPer)+' per '+peso(s.rentalBlock)+' of fuel'+(b.rentalManual?' (edited by hand)':'')+' · Driver '+peso(s.driverDay)+' × '+d+' day'+(d>1?'s':'')+(b.driverManual?' (edited by hand)':'');
+    sums();checkOverlap();mapLink();
   };
   const mapLink=()=>{$('#f-map').href='https://www.google.com/maps/search/?api=1&query='+enc((b.route||'').replace(/\(round trip\)/i,'').replace(/→/g,' to '))};
-  const sums=()=>{const t=totalOf(b),p=paidOf(b),bal=t-p;$('#f-total').textContent='Total '+peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
+  const sums=()=>{const t=totalOf(b),p=paidOf(b),bal=t-p;$('#f-total').textContent=peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
   const drawPays=()=>{
     $('#f-pays').innerHTML=b.payments.map((p,i)=>`<div class="pay"><input type="date" data-i="${i}" data-k="date" value="${esc(p.date)}"><input type="number" inputmode="decimal" min="0" placeholder="₱ amount" data-i="${i}" data-k="amount" value="${esc(p.amount)}"><button class="btn sm" data-x="${i}" aria-label="Remove payment">✕</button><input placeholder="note (GCash, cash, deposit…)" data-i="${i}" data-k="note" value="${esc(p.note||'')}"></div>`).join('')||'<div class="note">No payments recorded.</div>';
     $('#f-pays').querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{b.payments[el.dataset.i][el.dataset.k]=el.value;sums()}));
@@ -529,11 +563,12 @@ function openBooking(id,pre){
   };
   const checkOverlap=()=>{
     const c=b.status==='cancelled'?[]:live('bookings').filter(o=>o.id!==b.id&&active(o)&&o.start<=b.end&&b.start<=o.end);
-    $('#f-warn').innerHTML=c.length?`<div class="warn">⚠ Overlaps with ${c.map(o=>esc(o.customer)+' ('+fmt(o.start)+'–'+fmt(o.end)+')').join(', ')}. You can still save.</div>`:'';
+    $('#f-warn').innerHTML=c.length?`<div class="warn">⚠ Overlaps with ${c.map(o=>esc(o.customer||'No name')+' ('+fmt(o.start)+'–'+fmt(o.end)+')').join(', ')}. You can still save.</div>`:'';
   };
   const save=()=>{
-    if(!b.customer.trim()){$('#f-warn').innerHTML='<div class="warn">Please enter the customer name.</div>';return}
-    const rec={id:ex?ex.id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),customer:b.customer.trim(),phone:(b.phone||'').trim(),start:b.start,end:b.end,status:b.status,route:b.route||'',km:num(b.km),rental:num(b.rental),fuel:num(b.fuel),other:num(b.other),notes:b.notes||'',
+    auto();
+    const rec={id:ex?ex.id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),customer:(b.customer||'').trim(),phone:(b.phone||'').trim(),start:b.start,end:b.end,status:b.status,route:b.route||'',km:num(b.km),
+      fuel:num(b.fuel),rental:num(b.rental),withDriver:!!b.withDriver,driverFee:num(b.driverFee),rentalManual:!!b.rentalManual,driverManual:!!b.driverManual,other:num(b.other),notes:b.notes||'',
       payments:b.payments.filter(p=>num(p.amount)!==0).map(p=>({date:p.date,amount:num(p.amount),note:p.note||''}))};
     upsert('bookings',rec);
     S.month=new Date(parse(rec.start).getFullYear(),parse(rec.start).getMonth(),1);S.sel=rec.start;
@@ -644,7 +679,7 @@ addEventListener('appinstalled',()=>{deferred=null;renderInstall()});
 })();
 applyTheme();
 renderInstall();
-bindCalc();fillSettings(true);render();status();showTab('cal');
+bindCalc();fillSettings(true);if(!$('#from').value)$('#from').value=data.settings.from||'';calc();render();status();showTab('cal');
 if(cfg){sync();setTimeout(hideSplash,3500)}else hideSplash();
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
