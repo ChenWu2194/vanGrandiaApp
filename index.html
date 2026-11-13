@@ -101,6 +101,10 @@ html.dark .tabbar button.plus{color:#0b1020;box-shadow:none}
 .pay{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px}
 .pay input[data-k=note]{grid-column:1/3}
 .banner{background:var(--ambbg);color:var(--amb);padding:11px 14px;border-radius:16px;margin-bottom:14px;font-size:13px;font-weight:500}
+.banner.ok{background:var(--grnbg);color:var(--grn)}
+.install{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.install .txt{flex:1;font-size:14px;line-height:1.4}.install .txt b{display:block;font-size:15px;margin-bottom:2px}
+.install .x{background:none;border:0;color:var(--mut);font-size:24px;padding:4px 8px;cursor:pointer;line-height:1}
 .links{display:flex;gap:10px;margin-top:14px}.links .btn{flex:1;font-size:14px}
 .pagebar{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px}
 .pagebar b{flex:1;font-size:16px}.pagebar select{width:auto;min-height:40px;font-size:14px}
@@ -112,6 +116,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
 <body>
 <header class="top"><div><div class="eyebrow">Grandia · 2015</div><h1>Van Desk</h1></div><button id="theme" class="iconbtn" aria-label="Toggle dark mode"></button><button id="sync">…</button></header>
 <div class="wrap">
+<div id="install"></div>
 <div id="banner"></div>
 
 <section id="tab-cal">
@@ -183,8 +188,13 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
       <div class="full"><label for="c-token">Access token</label><input id="c-token" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
     </div>
     <div class="row" style="margin-top:14px"><button class="btn pri" id="c-save">Connect &amp; sync</button><button class="btn" id="c-now">Sync now</button></div>
-    <div class="row" style="margin-top:10px"><button class="btn danger sm" id="c-off">Disconnect this phone</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="c-link">Share team setup link</button></div>
+    <input id="c-linkbox" readonly style="display:none;margin-top:10px" aria-label="Setup link">
+    <div class="note">The link contains the token. Send it privately: whoever opens it is connected automatically.</div>
     <div class="msg" id="c-msg"></div>
+    <label for="c-paste" style="margin-top:14px">Got a setup link? Paste it here</label>
+    <div class="pinrow"><input id="c-paste" placeholder="https://…#setup=…" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn" id="c-use" style="flex:0 0 auto">Use</button></div>
+    <div class="row" style="margin-top:14px"><button class="btn danger sm" id="c-off">Disconnect this phone</button></div>
     <details style="margin-top:12px"><summary class="note" style="cursor:pointer">How to get the token</summary>
       <ol class="steps">
         <li>GitHub → profile photo → <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
@@ -233,6 +243,7 @@ const DEF_SETTINGS={price:100,base:9,m1:1.25,m2:1.6,m3:2,updatedAt:0};
 const FILE='data.json';
 let data=lsGet('van.data',null)||{settings:{...DEF_SETTINGS},bookings:[],routes:[]};
 let cfg=lsGet('van.cfg',null);          // {repo, token}
+let welcome=false,deferred=null;
 let sha=null,syncing=false,needSync=false,lastSync=lsGet('van.last',null),syncErr='',lastCalc=null,timer=null;
 const S={month:new Date(),sel:todayS,filter:'up'};S.month.setDate(1);
 const live=c=>data[c].filter(x=>!x.deleted);
@@ -311,7 +322,7 @@ function status(){
   else b.textContent='✓ Synced '+(lastSync?new Date(lastSync).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}):'');
   const bn=$('#banner');
   bn.innerHTML=!cfg?'<div class="banner">Data is only on this phone. Open <b>Settings</b> to connect the shared GitHub database so your team sees the same bookings.</div>'
-    :(syncErr&&syncErr!=='offline'?'<div class="banner">'+esc(syncErr)+'</div>':'');
+    :(syncErr&&syncErr!=='offline'?'<div class="banner">'+esc(syncErr)+'</div>':(welcome?'<div class="banner ok">✓ Connected to the team’s shared bookings.</div>':''));
   const si=$('#sync-info');if(si)si.textContent=cfg?('Connected to '+cfg.repo+'. '+(lastSync?'Last sync '+new Date(lastSync).toLocaleString('en-PH'):'Not synced yet')+'.'):'Not connected — data stays on this phone only.';
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
@@ -534,7 +545,7 @@ $('#c-save').onclick=async()=>{
 };
 $('#c-now').onclick=async()=>{const m=$('#c-msg');if(!cfg){m.className='msg err';m.textContent='Not connected yet.';return}m.className='msg';m.textContent='Syncing…';await sync();m.className=syncErr?'msg err':'msg ok';m.textContent=syncErr?(syncErr==='offline'?'Offline.':syncErr):'Up to date.'};
 let offArmed=false;
-$('#c-off').onclick=e=>{if(!offArmed){offArmed=true;e.target.textContent='Tap again to disconnect';return}cfg=null;lsSet('van.cfg',null);$('#c-token').value='';offArmed=false;e.target.textContent='Disconnect this phone';status();$('#c-msg').textContent='Disconnected. Data stays on this phone only.'};
+$('#c-off').onclick=e=>{if(!offArmed){offArmed=true;e.target.textContent='Tap again to disconnect';return}cfg=null;welcome=false;lsSet('van.cfg',null);$('#c-token').value='';try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}offArmed=false;e.target.textContent='Disconnect this phone';status();$('#c-msg').textContent='Disconnected. Data stays on this phone only.'};
 
 
 /* ---------------- theme ---------------- */
@@ -549,7 +560,63 @@ function applyTheme(){
 }
 $('#theme').onclick=()=>{lsSet('van.theme',document.documentElement.classList.contains('dark')?'light':'dark');applyTheme()};
 if(window.matchMedia)matchMedia('(prefers-color-scheme:dark)').addEventListener&&matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(!lsGet('van.theme',null))applyTheme()});
+
+/* ---------------- setup link + install ---------------- */
+const b64u=s=>b64e(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64ud=s=>b64d(s.replace(/-/g,'+').replace(/_/g,'/'));
+const makeLink=()=>location.origin+location.pathname+'#setup='+b64u(JSON.stringify({r:cfg.repo,t:cfg.token}));
+function parseSetup(str){
+  str=String(str||'').trim();
+  const m=str.match(/setup=([A-Za-z0-9_-]+)/)||str.match(/^([A-Za-z0-9_-]{24,})$/);
+  if(!m)return null;
+  try{const o=JSON.parse(b64ud(m[1]));if(o&&/^[\w.-]+\/[\w.-]+$/.test(o.r)&&typeof o.t==='string'&&o.t.length>10)return{repo:o.r,token:o.t}}catch(e){}
+  return null;
+}
+async function useSetup(c){cfg=c;lsSet('van.cfg',cfg);$('#c-repo').value=c.repo;$('#c-token').value=c.token;welcome=true;await sync();}
+$('#c-link').onclick=async()=>{
+  const m=$('#c-msg');
+  if(!cfg){m.className='msg err';m.textContent='Connect this phone first, then you can share the link.';return}
+  const l=makeLink();
+  try{
+    if(navigator.share){await navigator.share({title:'Van Desk – team setup',text:'Open this link to join the van desk:',url:l});m.className='msg ok';m.textContent='Shared.';return}
+    await navigator.clipboard.writeText(l);m.className='msg ok';m.textContent='Link copied. Send it privately to your team.';
+  }catch(e){
+    if(e&&e.name==='AbortError')return;
+    const b=$('#c-linkbox');b.style.display='block';b.value=l;b.focus();b.select();
+    m.className='msg';m.textContent='Copy the link above and send it privately.';
+  }
+};
+$('#c-use').onclick=async()=>{
+  const m=$('#c-msg'),c=parseSetup($('#c-paste').value);
+  if(!c){m.className='msg err';m.textContent='That doesn’t look like a setup link.';return}
+  m.className='msg';m.textContent='Connecting…';await useSetup(c);
+  if(syncErr&&syncErr!=='offline'){m.className='msg err';m.textContent=syncErr}else{m.className='msg ok';m.textContent='Connected.';$('#c-paste').value=''}
+};
+const standalone=()=>!!((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true);
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
+const iosSafari=isIOS&&/safari/i.test(navigator.userAgent)&&!/crios|fxios|edgios/i.test(navigator.userAgent);
+function renderInstall(){
+  const el=$('#install');
+  if(standalone()||lsGet('van.noinstall',false)){el.innerHTML='';return}
+  let txt='',btn='';
+  if(deferred){txt='<b>Install Van Desk</b>Add it to your home screen to use it like an app.';btn='<button class="btn pri sm" id="inst">Install app</button>'}
+  else if(iosSafari){txt='<b>Install Van Desk</b>Tap <b style="display:inline">Share</b> (square with arrow), then <b style="display:inline">Add to Home Screen</b>.'}
+  else if(isIOS){txt='<b>Install Van Desk</b>Open this page in Safari, then Share → Add to Home Screen.'}
+  else{el.innerHTML='';return}
+  el.innerHTML='<div class="card install"><div class="txt">'+txt+'</div>'+btn+'<button class="x" id="inst-x" aria-label="Dismiss">×</button></div>';
+  $('#inst-x').onclick=()=>{lsSet('van.noinstall',true);renderInstall()};
+  const b=$('#inst');if(b)b.onclick=async()=>{try{deferred.prompt();await deferred.userChoice}catch(e){}deferred=null;renderInstall()};
+}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;renderInstall()});
+addEventListener('appinstalled',()=>{deferred=null;renderInstall()});
+(function(){
+  if(!location.hash.startsWith('#setup='))return;
+  const c=parseSetup(location.hash);if(!c)return;
+  if(!cfg||cfg.repo!==c.repo||cfg.token!==c.token){cfg=c;lsSet('van.cfg',cfg);$('#c-repo').value=c.repo;$('#c-token').value=c.token;welcome=true}
+  if(standalone()){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+})();
 applyTheme();
+renderInstall();
 bindCalc();fillSettings(true);render();status();showTab('cal');
 if(cfg)sync();
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
