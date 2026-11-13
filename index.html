@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Van Desk">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Grandia Van Rental Desk</title>
+<style>
+:root{--bg:#f4f3ee;--card:#fff;--ink:#1d2326;--mut:#667075;--line:#e3e1da;--acc:#0f6b5c;--acc2:#e6f2ef;--red:#b3402f;--redbg:#fbeae6;--amb:#8a5f00;--ambbg:#fdf1d3;--grn:#1e7a46;--grnbg:#e1f3e8;--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom)}
+@media (prefers-color-scheme:dark){:root{--bg:#111517;--card:#1b2124;--ink:#ecebe6;--mut:#98a3a8;--line:#2c3539;--acc:#4cc2ad;--acc2:#1a2c29;--red:#ee8a78;--redbg:#3a211c;--amb:#e6b650;--ambbg:#3a2f15;--grn:#6fd09a;--grnbg:#163024}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:calc(76px + var(--sab));overscroll-behavior-y:contain}
+.top{background:var(--acc);color:#fff;padding:calc(10px + var(--sat)) 16px 10px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+@media (prefers-color-scheme:dark){.top{color:#0b1412}}
+.top h1{font-size:17px;margin:0;flex:1}
+#sync{border:0;border-radius:14px;padding:5px 11px;font:inherit;font-size:12px;background:rgba(255,255,255,.22);color:inherit;min-height:30px}
+.wrap{max-width:720px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+textarea{min-height:60px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.btn{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+@media (prefers-color-scheme:dark){.btn.pri{color:#0b1412}}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.sm{min-height:36px;padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>.btn{flex:1}
+.sp{flex:1}
+.pinrow{display:flex;gap:6px}.pinrow input{flex:1}.pinrow a{flex:0 0 44px;padding:0}
+.result{background:var(--acc2);border-radius:12px;padding:14px;margin-top:12px}
+.big{font-size:34px;font-weight:700;color:var(--acc);letter-spacing:-.5px;line-height:1.1}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.kv span{display:block;font-size:12px;color:var(--mut)}.kv b{font-size:16px}
+.chk{display:flex;align-items:center;gap:10px;min-height:44px}.chk input{width:22px;min-height:22px;height:22px}.chk label{margin:0;font-size:15px;color:var(--ink)}
+.note{font-size:12px;color:var(--mut);margin-top:8px}
+.msg{font-size:13px;margin-top:8px;color:var(--mut)}.msg.err{color:var(--red)}.msg.ok{color:var(--grn)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat span{font-size:12px;color:var(--mut);display:block}.stat b{font-size:19px}
+.cal-h{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.cal-h b{flex:1;text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.dow{background:var(--bg);text-align:center;font-size:11px;color:var(--mut);padding:4px 0}
+.day{background:var(--card);min-height:62px;padding:3px;cursor:pointer;overflow:hidden}
+.day.out{opacity:.4}.day.sel{outline:2px solid var(--acc);outline-offset:-2px}
+.day.today .n{background:var(--acc);color:#fff;border-radius:10px;padding:0 6px}
+@media (prefers-color-scheme:dark){.day.today .n{color:#0b1412}}
+.n{font-size:12px;color:var(--mut);display:inline-block;margin-bottom:3px}
+.chip{display:block;font-size:11px;padding:1px 4px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.paid{background:var(--grnbg);color:var(--grn)}.chip.part{background:var(--ambbg);color:var(--amb)}.chip.unpaid{background:var(--redbg);color:var(--red)}
+.chip.pending{border:1px dashed currentColor}
+@media (max-width:600px){.chip{font-size:0;height:6px;padding:0;border-radius:3px;background:currentColor!important;border:0!important}.chip.pending{opacity:.45}}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-top:8px;color:var(--mut)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.bk{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer}
+.bk .t{display:flex;gap:8px;align-items:center}.bk .t b{flex:1}
+.bk .s{font-size:13px;color:var(--mut);margin-top:2px}
+.tag{font-size:12px;padding:2px 9px;border-radius:10px;white-space:nowrap}
+.tag.paid{background:var(--grnbg);color:var(--grn)}.tag.part{background:var(--ambbg);color:var(--amb)}.tag.unpaid{background:var(--redbg);color:var(--red)}.tag.cancel{background:var(--line);color:var(--mut)}
+h3.sec{font-size:13px;color:var(--mut);margin:14px 2px 8px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:8px}
+h3.sec select{width:auto;min-height:34px;padding:4px 8px;font-size:14px;margin-left:auto;text-transform:none;letter-spacing:0}
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:var(--sab);z-index:6}
+.tabbar button{flex:1;background:none;border:0;padding:8px 0 6px;font:inherit;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px}
+.tabbar button span{font-size:20px;line-height:1}
+.tabbar button.on{color:var(--acc);font-weight:600}
+.fab{position:fixed;right:16px;bottom:calc(72px + var(--sab));width:56px;height:56px;border-radius:28px;background:var(--acc);color:#fff;border:0;font-size:30px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:6}
+@media (prefers-color-scheme:dark){.fab{color:#0b1412}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + var(--sab));-webkit-overflow-scrolling:touch}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:18px}}
+.sheet h3{margin:0 0 12px;font-size:17px}
+.warn{background:var(--redbg);color:var(--red);padding:9px 12px;border-radius:10px;font-size:13px;margin:10px 0}
+.pay{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px}
+.pay input[data-k=note]{grid-column:1/3}
+.banner{background:var(--ambbg);color:var(--amb);padding:9px 12px;border-radius:10px;margin-bottom:10px;font-size:13px}
+.links{display:flex;gap:8px;margin-top:10px}.links .btn{flex:1;font-size:14px}
+ol.steps{padding-left:20px;margin:6px 0;font-size:14px}ol.steps li{margin-bottom:6px}
+code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="top"><h1>🚐 Grandia Van Desk</h1><button id="sync">…</button></div>
+<div class="wrap">
+<div id="banner"></div>
+
+<section id="tab-cal">
+  <div class="stats" id="stats"></div>
+  <div class="card">
+    <div class="cal-h"><button class="btn sm" id="prev" aria-label="Previous month">‹</button><b id="mlabel"></b><button class="btn sm" id="today">Today</button><button class="btn sm" id="next" aria-label="Next month">›</button></div>
+    <div class="cal" id="cal"></div>
+    <div class="legend"><span><i style="background:var(--grn)"></i>Paid</span><span><i style="background:var(--amb)"></i>Partly paid</span><span><i style="background:var(--red)"></i>Unpaid</span><span>Faded/dashed = pending</span></div>
+  </div>
+  <h3 class="sec" id="daytitle"></h3>
+  <div id="daylist"></div>
+  <h3 class="sec">All bookings <select id="filter"><option value="up">Upcoming</option><option value="unpaid">Balance due</option><option value="all">Everything</option></select></h3>
+  <div id="list"></div>
+</section>
+
+<section id="tab-fuel" hidden>
+  <div class="card">
+    <h2>Trip fuel estimate</h2>
+    <div class="grid">
+      <div class="full"><label for="from">From</label><div class="pinrow"><input id="from" placeholder="e.g. Makati" autocomplete="off" list="places"><a class="btn" id="pin-from" target="_blank" rel="noopener" title="Search on Google Maps">📍</a></div></div>
+      <div class="full"><label for="to">To</label><div class="pinrow"><input id="to" placeholder="e.g. Baguio" autocomplete="off" list="places"><a class="btn" id="pin-to" target="_blank" rel="noopener" title="Search on Google Maps">📍</a></div></div>
+      <datalist id="places"></datalist>
+      <div class="full"><button class="btn pri" id="find" style="width:100%">🔎 Find distance automatically</button><div class="msg" id="find-msg"></div></div>
+      <div><label for="km">One-way km</label><input id="km" type="number" inputmode="decimal" min="0" placeholder="auto or type"></div>
+      <div><label for="traffic">Traffic</label><select id="traffic"></select></div>
+      <div class="chk"><input id="round" type="checkbox" checked><label for="round">Round trip (×2)</label></div>
+      <div><label for="extra">Extra km</label><input id="extra" type="number" inputmode="decimal" min="0" value="0"></div>
+    </div>
+    <div class="links"><a class="btn" id="g-dir" target="_blank" rel="noopener">🗺 Google Maps route</a><a class="btn" id="g-search" target="_blank" rel="noopener">🔍 Google Search</a></div>
+    <div class="result">
+      <div class="note" style="margin:0 0 2px">Estimated fuel cost</div>
+      <div class="big" id="r-cost">₱0</div>
+      <div class="kv">
+        <div><span>Total distance</span><b id="r-dist">0 km</b></div>
+        <div><span>Diesel needed</span><b id="r-l">0 L</b></div>
+        <div><span>Effective economy</span><b id="r-eco">–</b></div>
+        <div><span>Diesel price</span><b id="r-p">₱100/L</b></div>
+      </div>
+      <div class="note" id="r-time"></div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" id="to-book">Add to new booking</button></div>
+    </div>
+    <div class="note">Distance and the place search come from OpenStreetMap (road distance, free). The Google buttons open Google Maps / Search in a new tab so you can double-check the route. You can always type the km yourself.</div>
+  </div>
+</section>
+
+<section id="tab-set" hidden>
+  <div class="card">
+    <h2>Fuel assumptions (shared)</h2>
+    <div class="grid">
+      <div><label for="s-price">Diesel ₱ / litre</label><input id="s-price" type="number" inputmode="decimal" step="0.5"></div>
+      <div><label for="s-base">Free-flow km/L</label><input id="s-base" type="number" inputmode="decimal" step="0.1"></div>
+      <div><label for="s-m1">Moderate traffic ×</label><input id="s-m1" type="number" inputmode="decimal" step="0.05"></div>
+      <div><label for="s-m2">Heavy traffic ×</label><input id="s-m2" type="number" inputmode="decimal" step="0.05"></div>
+      <div><label for="s-m3">Severe traffic ×</label><input id="s-m3" type="number" inputmode="decimal" step="0.05"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="save-set">Save for everyone</button></div>
+    <div class="msg" id="set-msg"></div>
+    <div class="note">“×” = how much more fuel is used than in free flow. Defaults: ₱100/L, 9 km/L, severe = 2× (≈4.5 km/L). Compare with real refuels and adjust.</div>
+  </div>
+
+  <div class="card">
+    <h2>Shared database (GitHub)</h2>
+    <div id="sync-info" class="note" style="margin:0 0 10px"></div>
+    <div class="grid">
+      <div class="full"><label for="c-repo">Data repository (owner/name)</label><input id="c-repo" placeholder="ChenWu2194/VanGrandia" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+      <div class="full"><label for="c-token">Access token</label><input id="c-token" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="c-save">Connect &amp; sync</button><button class="btn" id="c-now">Sync now</button></div>
+    <div class="row" style="margin-top:8px"><button class="btn danger sm" id="c-off">Disconnect this phone</button></div>
+    <div class="msg" id="c-msg"></div>
+    <details style="margin-top:10px"><summary class="note" style="cursor:pointer">How to get the token</summary>
+      <ol class="steps">
+        <li>GitHub → profile photo → <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
+        <li>Repository access: <b>Only select repositories</b> → pick the data repo.</li>
+        <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+        <li>Copy the token and paste it above. Each teammate does this once on their own phone (or share your token privately).</li>
+      </ol>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Install on your phone</h2>
+    <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app / Add to Home screen.<br><b>iPhone (Safari):</b> Share button → Add to Home Screen.<br>Bookings you view are kept on the phone, so the app still opens without signal. Changes made offline upload when you're back online.</div>
+  </div>
+</section>
+</div>
+
+<button class="fab" id="fab" aria-label="New booking">+</button>
+<nav class="tabbar">
+  <button data-tab="cal" class="on"><span>📅</span>Calendar</button>
+  <button data-tab="fuel"><span>⛽</span>Fuel</button>
+  <button data-tab="set"><span>⚙️</span>Settings</button>
+</nav>
+<div id="modal-root"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const peso=n=>'₱'+Number(n||0).toLocaleString('en-PH',{maximumFractionDigits:2});
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0};
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const fmt=s=>s?parse(s).toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'';
+const todayS=iso(new Date());
+const nDays=(a,b)=>Math.round((parse(b)-parse(a))/864e5)+1;
+const enc=encodeURIComponent;
+const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,k)=>(o[k]=x[k],o),{}):x);
+const b64e=s=>{let t='';new TextEncoder().encode(s).forEach(c=>t+=String.fromCharCode(c));return btoa(t)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+/* ---------------- data ---------------- */
+const DEF_SETTINGS={price:100,base:9,m1:1.25,m2:1.6,m3:2,updatedAt:0};
+const FILE='data.json';
+let data=lsGet('van.data',null)||{settings:{...DEF_SETTINGS},bookings:[],routes:[]};
+let cfg=lsGet('van.cfg',null);          // {repo, token}
+let sha=null,syncing=false,needSync=false,lastSync=lsGet('van.last',null),syncErr='',lastCalc=null,timer=null;
+const S={month:new Date(),sel:todayS,filter:'up'};S.month.setDate(1);
+const live=c=>data[c].filter(x=>!x.deleted);
+const persist=()=>lsSet('van.data',data);
+
+function mergeData(a,b){
+  if(!b)return a;
+  const out={settings:(b.settings&&(b.settings.updatedAt||0)>(a.settings.updatedAt||0))?b.settings:a.settings};
+  const cutoff=Date.now()-90*864e5;
+  for(const c of ['bookings','routes']){
+    const m=new Map();
+    for(const x of [...(b[c]||[]),...a[c]]){const o=m.get(x.id);if(!o||(x.updatedAt||0)>=(o.updatedAt||0))m.set(x.id,x)}
+    out[c]=[...m.values()].filter(x=>!(x.deleted&&(x.updatedAt||0)<cutoff)).sort((p,q)=>p.id<q.id?-1:1);
+  }
+  return out;
+}
+function upsert(c,obj){obj.updatedAt=Date.now();data[c]=data[c].filter(x=>x.id!==obj.id);data[c].push(obj);persist();scheduleSync()}
+function removeItem(c,id){data[c]=data[c].filter(x=>x.id!==id);data[c].push({id,deleted:true,updatedAt:Date.now()});persist();scheduleSync()}
+function setSettings(s){data.settings={...s,updatedAt:Date.now()};persist();scheduleSync()}
+
+/* ---------------- GitHub sync ---------------- */
+async function gh(method,body){
+  const r=await fetch('https://api.github.com/repos/'+cfg.repo+'/contents/'+FILE,{method,cache:'no-store',
+    headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+cfg.token,'X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},
+    body:body?JSON.stringify(body):undefined});
+  return r;
+}
+async function getRemote(){
+  const r=await gh('GET');
+  if(r.status===404){ // file missing OR repo/token wrong: check repo
+    const rr=await fetch('https://api.github.com/repos/'+cfg.repo,{headers:{'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github+json'},cache:'no-store'});
+    if(!rr.ok)throw new Error(rr.status===404?'Repository not found — check the name and that the token can access it.':'GitHub said '+rr.status);
+    return {data:null,sha:null};
+  }
+  if(r.status===401||r.status===403)throw new Error('Token rejected by GitHub (expired or missing Contents permission).');
+  if(!r.ok)throw new Error('GitHub said '+r.status);
+  const j=await r.json();
+  if(!j.content)throw new Error('data.json is too large or unreadable.');
+  return {data:JSON.parse(b64d(j.content)),sha:j.sha};
+}
+async function putRemote(d,s){
+  const r=await gh('PUT',{message:'Van desk update '+new Date().toISOString(),content:b64e(JSON.stringify(d,null,1)),...(s?{sha:s}:{})});
+  if(r.ok){const j=await r.json();return {ok:true,sha:j.content.sha}}
+  return {ok:false,status:r.status};
+}
+function scheduleSync(){needSync=true;clearTimeout(timer);timer=setTimeout(sync,700);status()}
+async function sync(){
+  if(!cfg){status();return}
+  if(syncing){needSync=true;return}
+  syncing=true;needSync=false;syncErr='';status();
+  try{
+    for(let i=0;i<4;i++){
+      const r=await getRemote();
+      const merged=mergeData(data,r.data);
+      const same=r.data&&stable(merged)===stable(r.data);
+      data=merged;persist();render();
+      if(same){sha=r.sha;break}
+      const w=await putRemote(merged,r.sha);
+      if(w.ok){sha=w.sha;break}
+      if(w.status===409||w.status===422){if(i===3)throw new Error('Could not save (conflict) — try again.');continue}
+      if(w.status===401||w.status===403||w.status===404)throw new Error('No write access — token needs Contents: Read and write.');
+      throw new Error('GitHub said '+w.status);
+    }
+    lastSync=Date.now();lsSet('van.last',lastSync);
+  }catch(e){syncErr=(!navigator.onLine||e instanceof TypeError)?'offline':e.message}
+  syncing=false;status();
+  if(needSync&&!syncErr)scheduleSync();
+}
+function status(){
+  const b=$('#sync');
+  if(!cfg){b.textContent='Not shared';}
+  else if(syncing)b.textContent='Syncing…';
+  else if(syncErr==='offline')b.textContent='Offline · saved here';
+  else if(syncErr)b.textContent='⚠ Sync problem';
+  else if(needSync)b.textContent='Saving…';
+  else b.textContent='✓ Synced '+(lastSync?new Date(lastSync).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}):'');
+  const bn=$('#banner');
+  bn.innerHTML=!cfg?'<div class="banner">Data is only on this phone. Open <b>Settings</b> to connect the shared GitHub database so your team sees the same bookings.</div>'
+    :(syncErr&&syncErr!=='offline'?'<div class="banner">'+esc(syncErr)+'</div>':'');
+  const si=$('#sync-info');if(si)si.textContent=cfg?('Connected to '+cfg.repo+'. '+(lastSync?'Last sync '+new Date(lastSync).toLocaleString('en-PH'):'Not synced yet')+'.'):'Not connected — data stays on this phone only.';
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+addEventListener('online',sync);
+setInterval(()=>{if(!document.hidden&&cfg&&!syncing)sync()},45000);
+
+/* ---------------- fuel calculator ---------------- */
+const mult=l=>l==='1'?1:l==='2'?data.settings.m1:l==='3'?data.settings.m2:data.settings.m3;
+function calc(){
+  const s=data.settings,one=num($('#km').value),extra=num($('#extra').value);
+  const dist=one*($('#round').checked?2:1)+extra;
+  const eco=s.base/mult($('#traffic').value),liters=eco>0?dist/eco:0,cost=liters*s.price;
+  $('#r-cost').textContent=peso(Math.round(cost));
+  $('#r-dist').textContent=Math.round(dist).toLocaleString()+' km';
+  $('#r-eco').textContent=eco.toFixed(1)+' km/L';
+  $('#r-l').textContent=liters.toFixed(1)+' L';
+  $('#r-p').textContent=peso(s.price)+'/L';
+  const f=$('#from').value.trim(),t=$('#to').value.trim();
+  lastCalc={route:f&&t?f+' → '+t+($('#round').checked?' (round trip)':''):'',km:Math.round(dist),fuel:Math.round(cost)};
+  $('#pin-from').href='https://www.google.com/maps/search/?api=1&query='+enc(f);
+  $('#pin-to').href='https://www.google.com/maps/search/?api=1&query='+enc(t);
+  $('#g-dir').href='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+enc(f)+'&destination='+enc(t);
+  $('#g-search').href='https://www.google.com/search?q='+enc((f&&t?f+' to '+t+' distance by car':(f||t||'Philippines road distance')));
+}
+function fillTraffic(){
+  const cur=$('#traffic').value||'4',s=data.settings;
+  $('#traffic').innerHTML=[['1','Free flow (×1)'],['2','Moderate (×'+s.m1+')'],['3','Heavy (×'+s.m2+')'],['4','Severe (×'+s.m3+')']].map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
+}
+function fillPlaces(){
+  const set=new Set();live('routes').forEach(r=>{set.add(r.from);set.add(r.to)});
+  $('#places').innerHTML=[...set].sort().map(p=>`<option value="${esc(p)}">`).join('');
+}
+const slug=(a,b)=>(a+'__'+b).toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,100);
+function savedRoute(f,t){f=f.toLowerCase();t=t.toLowerCase();return live('routes').find(r=>(r.from.toLowerCase()===f&&r.to.toLowerCase()===t)||(r.from.toLowerCase()===t&&r.to.toLowerCase()===f))}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function geocode(q){
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ph&q='+enc(q));
+  if(!r.ok)throw new Error('Place search failed ('+r.status+')');
+  const j=await r.json();if(!j.length)throw new Error('Couldn\'t find “'+q+'”. Try a nearby town or add the province.');
+  return {lat:+j[0].lat,lon:+j[0].lon,name:j[0].display_name.split(',').slice(0,3).join(',')};
+}
+async function findDistance(){
+  const f=$('#from').value.trim(),t=$('#to').value.trim(),m=$('#find-msg');
+  if(!f||!t){m.className='msg err';m.textContent='Enter both From and To.';return}
+  const sv=savedRoute(f,t);
+  if(sv){$('#km').value=sv.km;m.className='msg ok';m.textContent='Saved route: '+sv.km+' km'+(sv.min?' (~'+Math.floor(sv.min/60)+'h '+Math.round(sv.min%60)+'m free-flow)':'');$('#r-time').textContent=sv.min?'Free-flow drive time ≈ '+Math.floor(sv.min/60)+' h '+Math.round(sv.min%60)+' min (before traffic).':'';calc();return}
+  if(!navigator.onLine){m.className='msg err';m.textContent='No internet — type the km yourself.';return}
+  const btn=$('#find');btn.disabled=true;m.className='msg';m.textContent='Looking up places…';
+  try{
+    const a=await geocode(f);await sleep(1100);const b=await geocode(t);
+    m.textContent='Calculating road distance…';
+    const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`);
+    const j=await r.json();if(!j.routes||!j.routes[0])throw new Error('No road route found between those places.');
+    const km=Math.round(j.routes[0].distance/1000),min=Math.round(j.routes[0].duration/60);
+    $('#km').value=km;
+    m.className='msg ok';m.textContent='Found: '+a.name+'  →  '+b.name+' · '+km+' km';
+    $('#r-time').textContent='Free-flow drive time ≈ '+Math.floor(min/60)+' h '+(min%60)+' min (before traffic).';
+    upsert('routes',{id:slug(f,t),from:f,to:t,km,min});fillPlaces();calc();
+  }catch(e){m.className='msg err';m.textContent=e.message||'Lookup failed — type the km yourself.'}
+  btn.disabled=false;
+}
+function bindCalc(){
+  ['km','extra','traffic','round','from','to'].forEach(id=>$('#'+id).addEventListener('input',calc));
+  ['from','to'].forEach(id=>$('#'+id).addEventListener('change',()=>{const f=$('#from').value.trim(),t=$('#to').value.trim();if(f&&t){const sv=savedRoute(f,t);if(sv){$('#km').value=sv.km;calc()}}}));
+  $('#find').onclick=findDistance;
+  $('#to-book').onclick=()=>{calc();showTab('cal');openBooking(null,{route:lastCalc.route,km:lastCalc.km,fuel:lastCalc.fuel})};
+}
+function fillSettings(force){
+  const s=data.settings;fillTraffic();
+  if(force||!$('#tab-set').contains(document.activeElement)){$('#s-price').value=s.price;$('#s-base').value=s.base;$('#s-m1').value=s.m1;$('#s-m2').value=s.m2;$('#s-m3').value=s.m3}
+  calc();
+}
+$('#save-set').onclick=()=>{
+  const n={price:num($('#s-price').value),base:num($('#s-base').value),m1:num($('#s-m1').value),m2:num($('#s-m2').value),m3:num($('#s-m3').value)};
+  const m=$('#set-msg');
+  if(!(n.price>0&&n.base>0&&n.m1>0&&n.m2>0&&n.m3>0)){m.className='msg err';m.textContent='All values must be above 0.';return}
+  setSettings(n);fillSettings(true);m.className='msg ok';m.textContent='Saved'+(cfg?' — syncing to the team.':'.');
+};
+
+/* ---------------- bookings ---------------- */
+const paidOf=b=>(b.payments||[]).reduce((a,p)=>a+num(p.amount),0);
+const totalOf=b=>num(b.rental)+num(b.fuel)+num(b.other);
+const balOf=b=>totalOf(b)-paidOf(b);
+const active=b=>b.status!=='cancelled';
+function payState(b){if(!active(b))return'cancel';const t=totalOf(b),p=paidOf(b);return p>0&&p>=t?'paid':p>0?'part':'unpaid'}
+const payLabel={paid:'Paid',part:'Partial',unpaid:'Unpaid',cancel:'Cancelled'};
+
+function renderStats(){
+  const a=live('bookings').filter(active);
+  const due=a.reduce((s,b)=>s+Math.max(0,balOf(b)),0),coll=a.reduce((s,b)=>s+paidOf(b),0);
+  const m0=iso(S.month),mE=iso(new Date(S.month.getFullYear(),S.month.getMonth()+1,0));
+  let days=0;a.forEach(b=>{const s=b.start>m0?b.start:m0,e=b.end<mE?b.end:mE;if(s<=e)days+=nDays(s,e)});
+  $('#stats').innerHTML=`<div class="stat"><span>Days booked this month</span><b>${days}</b></div><div class="stat"><span>Upcoming / current</span><b>${a.filter(b=>b.end>=todayS).length}</b></div>
+   <div class="stat"><span>Collected</span><b>${peso(coll)}</b></div><div class="stat"><span>Balance due</span><b style="color:${due?'var(--red)':'var(--grn)'}">${peso(due)}</b></div>`;
+}
+function renderCal(){
+  const y=S.month.getFullYear(),m=S.month.getMonth(),bk=live('bookings').filter(active);
+  $('#mlabel').textContent=S.month.toLocaleDateString('en-PH',{month:'long',year:'numeric'});
+  const start=new Date(y,m,1-new Date(y,m,1).getDay());
+  let h=['S','M','T','W','T','F','S'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<42;i++){
+    const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),s=iso(d);
+    if(i>=35&&d.getMonth()!==m)break;
+    const bs=bk.filter(b=>b.start<=s&&s<=b.end);
+    h+=`<div class="day ${d.getMonth()!==m?'out':''} ${s===todayS?'today':''} ${s===S.sel?'sel':''}" data-d="${s}"><span class="n">${d.getDate()}</span>`+
+      bs.map(b=>`<span class="chip ${payState(b)} ${b.status==='pending'?'pending':''}">${esc(b.customer||'Booking')}</span>`).join('')+'</div>';
+  }
+  $('#cal').innerHTML=h;
+}
+function card(b){
+  const st=payState(b),bal=Math.max(0,balOf(b));
+  return `<button class="bk" data-id="${esc(b.id)}"><div class="t"><b>${esc(b.customer)}</b><span class="tag ${st}">${payLabel[st]}</span></div>
+   <div class="s">${fmt(b.start)}${b.end!==b.start?' – '+fmt(b.end):''} · ${nDays(b.start,b.end)} day${nDays(b.start,b.end)>1?'s':''}${b.status==='pending'?' · pending':''}${b.route?' · '+esc(b.route):''}</div>
+   <div class="s">Total ${peso(totalOf(b))} · Paid ${peso(paidOf(b))}${active(b)&&bal>0?' · <b style="color:var(--red)">Due '+peso(bal)+'</b>':''}</div></button>`;
+}
+function renderLists(){
+  const all=live('bookings').sort((a,b)=>a.start.localeCompare(b.start));
+  const on=all.filter(b=>b.start<=S.sel&&S.sel<=b.end);
+  $('#daytitle').textContent=(S.sel===todayS?'Today':parse(S.sel).toLocaleDateString('en-PH',{weekday:'short',month:'short',day:'numeric'}));
+  $('#daylist').innerHTML=(on.map(card).join('')||'<div class="note" style="margin:0 2px 8px">Van is free this day.</div>')+`<button class="btn" id="book-day" style="width:100%">+ Book starting ${fmt(S.sel)}</button>`;
+  let L=all;
+  if(S.filter==='up')L=L.filter(b=>active(b)&&b.end>=todayS);
+  if(S.filter==='unpaid')L=L.filter(b=>active(b)&&balOf(b)>0);
+  $('#list').innerHTML=L.map(card).join('')||'<div class="note">Nothing here yet.</div>';
+}
+function render(){renderStats();renderCal();renderLists();fillPlaces();fillSettings(false)}
+
+function openBooking(id,pre){
+  const ex=id?data.bookings.find(b=>b.id===id&&!b.deleted):null;
+  pre=pre||{};
+  const b=ex?JSON.parse(JSON.stringify(ex)):{id:'',customer:'',phone:'',start:pre.start||todayS,end:pre.start||todayS,route:pre.route||'',km:pre.km||'',rental:'',fuel:pre.fuel||'',other:'',status:'confirmed',payments:[],notes:''};
+  const root=$('#modal-root');
+  const draw=()=>{
+    root.innerHTML=`<div class="modal"><div class="sheet">
+     <h3>${ex?'Edit booking':'New booking'}</h3>
+     <div class="grid">
+      <div class="full"><label>Customer</label><input id="f-customer" value="${esc(b.customer)}"></div>
+      <div class="full"><label>Phone</label><div class="pinrow"><input id="f-phone" type="tel" inputmode="tel" value="${esc(b.phone||'')}"><a class="btn" id="call" href="tel:${esc((b.phone||'').replace(/[^+\d]/g,''))}" title="Call">📞</a></div></div>
+      <div><label>First day</label><input id="f-start" type="date" value="${b.start}"></div>
+      <div><label>Last day</label><input id="f-end" type="date" value="${b.end}"></div>
+      <div class="full"><label>Status</label><select id="f-status"><option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option></select></div>
+      <div class="full"><label>Route / destination</label><div class="pinrow"><input id="f-route" value="${esc(b.route||'')}"><a class="btn" id="f-map" target="_blank" rel="noopener" title="Open in Google Maps">📍</a></div></div>
+      <div><label>Rental fee ₱</label><input id="f-rental" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>
+      <div><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>
+      <div class="full"><label>Other (driver, toll…) ₱</label><input id="f-other" type="number" inputmode="decimal" min="0" value="${esc(b.other)}"></div>
+     </div>
+     ${lastCalc&&lastCalc.fuel?`<button class="btn sm" id="f-uselast" style="margin-top:8px">Use fuel from calculator (${peso(lastCalc.fuel)})</button>`:''}
+     <div style="margin:10px 0 4px;text-align:right"><b id="f-total"></b></div>
+     <h3 style="margin:14px 0 8px;font-size:14px">Payments</h3>
+     <div id="f-pays"></div>
+     <div class="row"><button class="btn sm" id="f-addpay" style="flex:0">+ Add payment</button><span class="sp"></span><span id="f-bal" style="text-align:right"></span></div>
+     <div style="margin-top:12px"><label>Notes</label><textarea id="f-notes" rows="2">${esc(b.notes||'')}</textarea></div>
+     <div id="f-warn"></div>
+     <div class="row" style="margin-top:14px">${ex?'<button class="btn danger" id="f-del" style="flex:0 0 auto">Delete</button>':''}<button class="btn" id="f-cancel">Close</button><button class="btn pri" id="f-save">Save</button></div>
+    </div></div>`;
+    drawPays();sums();mapLink();
+    ['customer','phone','start','end','status','route','rental','fuel','other','notes'].forEach(k=>$('#f-'+k).addEventListener('input',()=>{
+      b[k]=$('#f-'+k).value;
+      if(k==='start'&&b.end<b.start){b.end=b.start;$('#f-end').value=b.end}
+      if(k==='end'&&b.end<b.start){b.start=b.end;$('#f-start').value=b.start}
+      if(k==='phone')$('#call').href='tel:'+b.phone.replace(/[^+\d]/g,'');
+      sums();checkOverlap();mapLink()}));
+    const ul=$('#f-uselast');if(ul)ul.onclick=()=>{b.fuel=lastCalc.fuel;if(!b.route)b.route=lastCalc.route;if(!b.km)b.km=lastCalc.km;draw()};
+    $('#f-addpay').onclick=()=>{b.payments.push({date:todayS,amount:'',note:''});drawPays();sums()};
+    $('#f-cancel').onclick=()=>root.innerHTML='';
+    $('.modal').addEventListener('click',e=>{if(e.target.classList.contains('modal'))root.innerHTML=''});
+    $('#f-save').onclick=save;
+    if(ex){let armed=false;$('#f-del').onclick=e=>{if(!armed){armed=true;e.target.textContent='Tap again';return}removeItem('bookings',ex.id);root.innerHTML='';render()}}
+    checkOverlap();
+  };
+  const mapLink=()=>{$('#f-map').href='https://www.google.com/maps/search/?api=1&query='+enc((b.route||'').replace(/\(round trip\)/i,'').replace(/→/g,' to '))};
+  const sums=()=>{const t=totalOf(b),p=paidOf(b),bal=t-p;$('#f-total').textContent='Total '+peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
+  const drawPays=()=>{
+    $('#f-pays').innerHTML=b.payments.map((p,i)=>`<div class="pay"><input type="date" data-i="${i}" data-k="date" value="${esc(p.date)}"><input type="number" inputmode="decimal" min="0" placeholder="₱ amount" data-i="${i}" data-k="amount" value="${esc(p.amount)}"><button class="btn sm" data-x="${i}" aria-label="Remove payment">✕</button><input placeholder="note (GCash, cash, deposit…)" data-i="${i}" data-k="note" value="${esc(p.note||'')}"></div>`).join('')||'<div class="note">No payments recorded.</div>';
+    $('#f-pays').querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{b.payments[el.dataset.i][el.dataset.k]=el.value;sums()}));
+    $('#f-pays').querySelectorAll('[data-x]').forEach(el=>el.onclick=()=>{b.payments.splice(+el.dataset.x,1);drawPays();sums()});
+  };
+  const checkOverlap=()=>{
+    const c=b.status==='cancelled'?[]:live('bookings').filter(o=>o.id!==b.id&&active(o)&&o.start<=b.end&&b.start<=o.end);
+    $('#f-warn').innerHTML=c.length?`<div class="warn">⚠ Overlaps with ${c.map(o=>esc(o.customer)+' ('+fmt(o.start)+'–'+fmt(o.end)+')').join(', ')}. You can still save.</div>`:'';
+  };
+  const save=()=>{
+    if(!b.customer.trim()){$('#f-warn').innerHTML='<div class="warn">Please enter the customer name.</div>';return}
+    const rec={id:ex?ex.id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),customer:b.customer.trim(),phone:(b.phone||'').trim(),start:b.start,end:b.end,status:b.status,route:b.route||'',km:num(b.km),rental:num(b.rental),fuel:num(b.fuel),other:num(b.other),notes:b.notes||'',
+      payments:b.payments.filter(p=>num(p.amount)!==0).map(p=>({date:p.date,amount:num(p.amount),note:p.note||''}))};
+    upsert('bookings',rec);
+    S.month=new Date(parse(rec.start).getFullYear(),parse(rec.start).getMonth(),1);S.sel=rec.start;
+    root.innerHTML='';render();
+  };
+  draw();
+}
+
+/* ---------------- wiring ---------------- */
+function showTab(t){
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  ['cal','fuel','set'].forEach(x=>$('#tab-'+x).hidden=x!==t);
+  $('#fab').hidden=t!=='cal';
+  scrollTo(0,0);
+  if(t==='set'){fillSettings(true);status()}
+}
+document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$('#prev').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);renderStats();renderCal()};
+$('#next').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);renderStats();renderCal()};
+$('#today').onclick=()=>{const n=new Date();S.month=new Date(n.getFullYear(),n.getMonth(),1);S.sel=todayS;render()};
+$('#fab').onclick=()=>openBooking(null,{start:S.sel});
+$('#filter').onchange=e=>{S.filter=e.target.value;renderLists()};
+$('#cal').addEventListener('click',e=>{const d=e.target.closest('.day');if(d){S.sel=d.dataset.d;renderCal();renderLists()}});
+document.addEventListener('click',e=>{
+  const bk=e.target.closest('.bk');if(bk){openBooking(bk.dataset.id);return}
+  if(e.target.id==='book-day')openBooking(null,{start:S.sel});
+});
+$('#sync').onclick=()=>cfg?sync():showTab('set');
+$('#c-repo').value=cfg?cfg.repo:'ChenWu2194/VanGrandia';
+$('#c-token').value=cfg?cfg.token:'';
+$('#c-save').onclick=async()=>{
+  const repo=$('#c-repo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/$/,''),token=$('#c-token').value.trim(),m=$('#c-msg');
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo)||!token){m.className='msg err';m.textContent='Enter the repo as owner/name and paste the token.';return}
+  cfg={repo,token};lsSet('van.cfg',cfg);m.className='msg';m.textContent='Connecting…';
+  await sync();
+  if(syncErr&&syncErr!=='offline'){m.className='msg err';m.textContent=syncErr}else if(syncErr){m.className='msg err';m.textContent='No internet right now — will sync when back online.'}else{m.className='msg ok';m.textContent='Connected. Everyone using this repo now shares the same data.'}
+};
+$('#c-now').onclick=async()=>{const m=$('#c-msg');if(!cfg){m.className='msg err';m.textContent='Not connected yet.';return}m.className='msg';m.textContent='Syncing…';await sync();m.className=syncErr?'msg err':'msg ok';m.textContent=syncErr?(syncErr==='offline'?'Offline.':syncErr):'Up to date.'};
+let offArmed=false;
+$('#c-off').onclick=e=>{if(!offArmed){offArmed=true;e.target.textContent='Tap again to disconnect';return}cfg=null;lsSet('van.cfg',null);$('#c-token').value='';offArmed=false;e.target.textContent='Disconnect this phone';status();$('#c-msg').textContent='Disconnected. Data stays on this phone only.'};
+
+bindCalc();fillSettings(true);render();status();showTab('cal');
+if(cfg)sync();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
