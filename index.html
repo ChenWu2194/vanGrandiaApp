@@ -247,7 +247,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
     <h2>Install on your phone</h2>
     <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
-  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 14 · 13 Nov 2026</div>
+  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 15 · 13 Nov 2026</div>
 </section>
 </div>
 
@@ -396,7 +396,6 @@ function fillTraffic(){
   const cur=$('#traffic').value||'3',s=data.settings;
   $('#traffic').innerHTML=[['1','Free flow (×1)'],['2','Moderate (×'+s.m1+')'],['3','Heavy (×'+s.m2+')'],['4','Severe (×'+s.m3+')']].map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
 }
-function fillPlaces(){}
 const sel={from:null,to:null,bfrom:null,bto:null},acCache=new Map();
 async function suggest(q,signal){
   const k=q.toLowerCase();if(acCache.has(k))return acCache.get(k);
@@ -422,8 +421,10 @@ function setupAutocomplete(w,id,boxId){
     box.innerHTML=items.map((x,i)=>`<button type="button" data-i="${i}"><b>${esc(x.title)}</b>${x.sub?`<small>${esc(x.sub)}</small>`:''}</button>`).join('');
     box.hidden=false;
     box.querySelectorAll('button').forEach(b=>{
-      const pick=e=>{e.preventDefault();const x=items[+b.dataset.i];inp.value=x.label;sel[w]=x.lat!=null?{lat:x.lat,lon:x.lon,name:x.label,label:x.label}:null;hide();
-        inp.dispatchEvent(new Event('input',{bubbles:true}));sel[w]=x.lat!=null?{lat:x.lat,lon:x.lon,name:x.label,label:x.label}:null;inp.dispatchEvent(new Event('change',{bubbles:true}))};
+      const pick=e=>{e.preventDefault();const x=items[+b.dataset.i];inp.value=x.label;hide();
+        inp.dispatchEvent(new Event('input',{bubbles:true})); // the input handler clears any earlier pick…
+        sel[w]=x.lat!=null?{lat:x.lat,lon:x.lon,name:x.label,label:x.label}:null; // …so remember this one afterwards
+        inp.dispatchEvent(new Event('change',{bubbles:true}))};
       b.addEventListener('mousedown',pick);b.addEventListener('touchstart',pick,{passive:false});
     });
   };
@@ -474,7 +475,7 @@ async function findDistance(){
     $('#km').value=km;
     m.className='msg ok';m.textContent='Found: '+a.name+'  →  '+b.name+' · '+km+' km';
     $('#r-time').textContent='Free-flow drive time ≈ '+Math.floor(min/60)+' h '+(min%60)+' min (before traffic).';
-    upsert('routes',{id:slug(f,t),from:f,to:t,km,min});fillPlaces();calc();
+    upsert('routes',{id:slug(f,t),from:f,to:t,km,min});calc();
   }catch(e){m.className='msg err';m.textContent=e.message||'Lookup failed — type the km yourself.'}
   btn.disabled=false;
 }
@@ -552,7 +553,7 @@ function renderLists(){
   if(S.filter==='unpaid')L=L.filter(b=>active(b)&&balOf(b)>0);
   $('#list').innerHTML=L.map(card).join('')||'<div class="note">Nothing here yet.</div>';
 }
-function render(){renderStats();renderCal();renderLists();fillPlaces();fillSettings(false)}
+function render(){renderStats();renderCal();renderLists();fillSettings(false)}
 
 function openBooking(id,pre){
   const ex=id?data.bookings.find(b=>b.id===id&&!b.deleted):null;
@@ -697,6 +698,7 @@ function showTab(t){
   if(t==='set'){fillSettings(true);status()}
 }
 document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+const curTab=()=>(document.querySelector('.tabbar button.on')||{}).dataset.tab;
 $('#prev').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);renderStats();renderCal()};
 $('#next').onclick=()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);renderStats();renderCal()};
 $('#today').onclick=()=>{const n=new Date();S.month=new Date(n.getFullYear(),n.getMonth(),1);S.sel=todayS;render()};
@@ -719,8 +721,32 @@ $('#c-save').onclick=async()=>{
 };
 $('#c-now').onclick=async()=>{const m=$('#c-msg');if(!cfg){m.className='msg err';m.textContent='Not connected yet.';return}m.className='msg';m.textContent='Syncing…';await sync();m.className=syncErr?'msg err':'msg ok';m.textContent=syncErr?(syncErr==='offline'?'Offline.':syncErr):'Up to date.'};
 let offArmed=false;
-$('#c-off').onclick=e=>{if(!offArmed){offArmed=true;e.target.textContent='Tap again to disconnect';return}cfg=null;welcome=false;lsSet('van.cfg',null);$('#c-token').value='';try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}offArmed=false;e.target.textContent='Disconnect this phone';status();$('#c-msg').textContent='Disconnected. Data stays on this phone only.'};
+$('#c-off').onclick=e=>{if(!offArmed){offArmed=true;e.target.textContent='Tap again to disconnect';return}cfg=null;welcome=false;lsSet('van.cfg',null);$('#c-token').value='';try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){}offArmed=false;e.target.textContent='Disconnect this phone';status();$('#c-msg').textContent='Disconnected. Data stays on this phone only.'};
 
+
+/* ---------------- phone back button ----------------
+   History always holds a spare "guard" entry on top of the start page, so the first back press stays inside the app.
+   Back closes an open form -> then returns to Calendar -> then asks before leaving. */
+const armBack=()=>history.pushState({guard:1},'');
+function askExit(){
+  if($('#exit-root'))return;
+  const el=document.createElement('div');el.id='exit-root';el.className='modal';
+  el.innerHTML='<div class="sheet"><h3>Exit Van Desk?</h3><div class="row"><button class="btn" id="exit-stay">Stay</button><button class="btn pri" id="exit-go">Exit</button></div></div>';
+  document.body.appendChild(el);
+  const stay=()=>{el.remove();armBack()};
+  $('#exit-stay').onclick=stay;
+  el.addEventListener('click',e=>{if(e.target===el)stay()});
+  $('#exit-go').onclick=()=>{history.back();setTimeout(()=>window.close(),150)}; // a second Back press also leaves
+}
+window.addEventListener('popstate',e=>{
+  if(e.state&&e.state.guard)return; // moving forward again
+  const root=$('#modal-root');
+  if($('#exit-root')){$('#exit-root').remove();armBack()}
+  else if(root.firstChild){root.innerHTML='';armBack()}
+  else if(curTab()!=='cal'){showTab('cal');armBack()}
+  else askExit();
+});
+if(!(history.state&&history.state.guard)){history.replaceState({root:1},'');armBack()}
 
 /* ---------------- theme ---------------- */
 const MOON='<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>';
@@ -787,7 +813,7 @@ addEventListener('appinstalled',()=>{deferred=null;renderInstall()});
   if(!location.hash.startsWith('#setup='))return;
   const c=parseSetup(location.hash);if(!c)return;
   if(!cfg||cfg.repo!==c.repo||cfg.token!==c.token){cfg=c;lsSet('van.cfg',cfg);$('#c-repo').value=c.repo;$('#c-token').value=c.token;welcome=true}
-  if(standalone()){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+  if(standalone()){try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){}}
 })();
 applyTheme();
 renderInstall();
