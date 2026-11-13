@@ -1,0 +1,31 @@
+{
+  "name": "Grandia Van Rental Desk",
+  "short_name": "Van Desk",
+  "description": "Fuel estimator, booking calendar and payments for the Grandia van",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3d63f5",
+  "theme_color": "#3d63f5",
+  "icons": [
+    {
+      "src": "logo-v7-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-v7-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-v7-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
