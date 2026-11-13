@@ -247,7 +247,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
     <h2>Install on your phone</h2>
     <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
-  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 13 · 13 Nov 2026</div>
+  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 14 · 13 Nov 2026</div>
 </section>
 </div>
 
@@ -586,7 +586,7 @@ function openBooking(id,pre){
       <div class="full"><label>To</label><div class="acwrap"><input id="f-to" placeholder="e.g. Baguio" value="${esc(b.to)}" autocomplete="off" autocapitalize="words" spellcheck="false"><div class="ac" id="ac-f-to" hidden></div></div></div>
       <div class="full chk" style="gap:18px"><label><input type="radio" name="f-round" id="f-rt1" ${b.round?'checked':''}> Round trip</label><label><input type="radio" name="f-round" id="f-rt0" ${b.round?'':'checked'}> One way</label></div>`:''}
       <div class="full"><label>Customer</label><input id="f-customer" value="${esc(b.customer)}"></div>
-      <div class="full"><label>Phone</label><div class="pinrow"><input id="f-phone" type="tel" inputmode="tel" value="${esc(b.phone||'')}"><a class="btn tile" id="call" href="tel:${esc((b.phone||'').replace(/[^+\d]/g,''))}" aria-label="Call"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></a></div></div>
+      <div class="full"><label>Phone${simple?' <small style="opacity:.6;font-weight:400">(Optional)</small>':''}</label><div class="pinrow"><input id="f-phone" type="tel" inputmode="tel" value="${esc(b.phone||'')}"><a class="btn tile" id="call" href="tel:${esc((b.phone||'').replace(/[^+\d]/g,''))}" aria-label="Call"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></a></div></div>
       <div><label>First day</label><input id="f-start" type="date" value="${b.start}"></div>
       <div><label>Last day</label><input id="f-end" type="date" value="${b.end}"></div>
       <div class="full"><label>Status</label><select id="f-status"><option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option><option value="pending" ${b.status==='pending'?'selected':''}>Pending</option><option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option></select></div>
@@ -594,7 +594,7 @@ function openBooking(id,pre){
       ${simple?'':`<div class="full"><label>Fuel fee ₱</label><input id="f-fuel" type="number" inputmode="decimal" min="0" value="${esc(b.fuel)}"></div>`}
      </div>
      ${!simple&&lastCalc&&lastCalc.fuel?`<button class="btn sm" id="f-uselast" style="margin-top:8px">Use fuel from calculator (${peso(lastCalc.fuel)})</button>`:''}
-     ${simple?`<div class="full" style="margin-top:8px"><label>Total ₱</label><input id="f-total" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"><div class="note" id="f-hint" style="margin-top:6px"></div></div>`:`<div class="total-line"><span>Total</span><b id="f-total"></b></div>
+     ${simple?`<div class="full" style="margin-top:8px"><label>Suggested Total ₱</label><input id="f-total" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"><div class="note" id="f-hint" style="margin-top:6px"></div></div>`:`<div class="total-line"><span>Total</span><b id="f-total"></b></div>
      <details id="f-det" ${detOpen?'open':''}><summary>Fee breakdown (automatic)</summary>
        <div class="grid" style="margin-top:12px">
         <div><label>Van rental ₱</label><input id="f-rental" type="number" inputmode="decimal" min="0" value="${esc(b.rental)}"></div>
@@ -646,8 +646,6 @@ function openBooking(id,pre){
   let lookT,lookSeq=0;
   const hint=()=>{const h=$('#f-hint');if(!h)return;
     if(b.lookMsg)h.textContent=b.lookMsg;
-    else if(b.sugg&&!b.rentalManual)h.textContent=num(b.oneKm)+' km one way · fuel '+peso(b.sugg.fuel)+' + rental '+peso(b.sugg.rental)+' + driver '+peso(b.sugg.driver)+' (suggested — edit the total if needed)';
-    else if(b.sugg)h.textContent='Suggested '+peso(b.sugg.fuel+b.sugg.rental+b.sugg.driver)+' for '+num(b.oneKm)+' km one way';
     else h.textContent=''};
   const lookup=(first)=>{
     clearTimeout(lookT);const f=(b.from||'').trim(),t=(b.to||'').trim();
