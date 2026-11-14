@@ -67,7 +67,7 @@ html.dark .btn.pri{color:#0b1020;box-shadow:none}
 .note{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5}
 .msg{font-size:13px;margin-top:8px;color:var(--mut)}.msg.err{color:var(--red)}.msg.ok{color:var(--grn)}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:18px 20px}
-.stat span{font-size:12px;color:var(--mut);display:block}.stat b{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.stat span{font-size:12px;color:var(--mut);display:block}.stat b{font-size:20px;font-weight:700;letter-spacing:-.3px}.stat.hero{grid-column:1/-1}.stat.hero b{font-size:30px;letter-spacing:-.6px}.stat.hero small{display:block;font-size:11px;color:var(--mut);margin-top:2px}
 .cal-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .cal-h b{flex:1;text-align:center;font-size:16px}
 .cal-h .btn{min-width:40px;padding:0 12px}
@@ -247,7 +247,7 @@ code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px}
     <h2>Install on your phone</h2>
     <div class="note" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → Install app.<br><b>iPhone (Safari):</b> Share → Add to Home Screen.<br>The app keeps what you've viewed, so it opens without signal. Changes made offline upload when you're back online.</div>
   </div>
-  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 15 · 13 Nov 2026</div>
+  <div class="note" style="text-align:center;margin:4px 0 12px">Van Desk · version 16 · 13 Nov 2026</div>
 </section>
 </div>
 
@@ -511,6 +511,8 @@ $('#save-set').onclick=()=>{
 const paidOf=b=>(b.payments||[]).reduce((a,p)=>a+num(p.amount),0);
 const totalOf=b=>num(b.rental)+num(b.fuel)+num(b.other)+num(b.driverFee)+num(b.affiliateFee);
 const balOf=b=>totalOf(b)-paidOf(b);
+const vanOf=b=>paidOf(b)-num(b.fuel)-num(b.driverFee); // Van Money: what's left of the paid money after fuel and driver
+const vanColor=v=>v<0?'var(--red)':'var(--grn)';
 const active=b=>b.status!=='cancelled';
 function payState(b){if(!active(b))return'cancel';const t=totalOf(b),p=paidOf(b);return p>0&&p>=t?'paid':p>0?'part':'unpaid'}
 const payLabel={paid:'Paid',part:'Partial',unpaid:'Unpaid',cancel:'Cancelled'};
@@ -520,7 +522,8 @@ function renderStats(){
   const due=a.reduce((s,b)=>s+Math.max(0,balOf(b)),0),coll=a.reduce((s,b)=>s+paidOf(b),0);
   const m0=iso(S.month),mE=iso(new Date(S.month.getFullYear(),S.month.getMonth()+1,0));
   let days=0;a.forEach(b=>{const s=b.start>m0?b.start:m0,e=b.end<mE?b.end:mE;if(s<=e)days+=nDays(s,e)});
-  $('#stats').innerHTML=`<div class="stat"><span>Days booked this month</span><b>${days}</b></div><div class="stat"><span>Upcoming / current</span><b>${a.filter(b=>b.end>=todayS).length}</b></div>
+  const van=a.reduce((s,b)=>s+vanOf(b),0);
+  $('#stats').innerHTML=`<div class="stat hero"><span>Van Money</span><b style="color:${vanColor(van)}">${peso(van)}</b><small>paid − fuel − driver</small></div><div class="stat"><span>Days booked this month</span><b>${days}</b></div><div class="stat"><span>Upcoming / current</span><b>${a.filter(b=>b.end>=todayS).length}</b></div>
    <div class="stat"><span>Collected</span><b>${peso(coll)}</b></div><div class="stat"><span>Balance due</span><b style="color:${due?'var(--red)':'var(--grn)'}">${peso(due)}</b></div>`;
 }
 function renderCal(){
@@ -562,8 +565,9 @@ function openBooking(id,pre){
   const simple=ex?!!ex.simple:!!pre.simple; // quick booking: from/to + one editable total
   if(simple){
     b.from=ex&&ex.from!==undefined?ex.from:data.settings.from;b.to=ex?ex.to||'':'';b.round=ex&&ex.round!==undefined?ex.round:true;
-    b.oneKm=ex&&ex.oneKm?ex.oneKm:'';b.fuel='';b.withDriver=false;b.driverManual=b.affiliateManual=true;b.driverFee=0;b.affiliateFee=0;
-    if(ex)b.rentalManual=true;else{b.rental=4000;b.rentalManual=false}
+    b.oneKm=ex&&ex.oneKm?ex.oneKm:'';b.withDriver=false;b.driverManual=b.affiliateManual=true;b.affiliateFee=0;
+    b.fuelC=ex?num(ex.fuel):0;b.driverC=ex?num(ex.driverFee):0; // fuel and driver costs behind the single total
+    if(ex){b.rental=totalOf(ex);b.rentalManual=true}else{b.rental=4000;b.rentalManual=false}
   }
   if(ex&&ex.withDriver===undefined){b.withDriver=false;b.rentalManual=true;b.driverManual=true;b.driverFee=b.driverFee||0} // older booking: keep its saved amounts
   if(ex&&ex.affiliate===undefined){b.affiliate=false;b.affiliateFee=b.affiliateFee||0}
@@ -574,10 +578,13 @@ function openBooking(id,pre){
     if(!b.driverManual)b.driverFee=b.withDriver?d*s.driverDay:0;
     if(!b.affiliateManual)b.affiliateFee=b.affiliate?d*s.affiliateDay:0};
   const autoSimple=()=>{ // suggested total = fuel from the calculator + rental + driver for the days
-    if(b.rentalManual)return;const s=data.settings,d=daysOf(),km=num(b.oneKm)*(b.round?2:1);
-    if(!km){b.rental=4000;b.sugg=null;return}
-    const fuel=Math.ceil(km/(s.base/mult($('#traffic').value||'3'))*s.price/100-1e-9)*100;
-    b.sugg={fuel,rental:Math.round(d*s.rentalDay+fuel*s.rentalPer/s.rentalBlock),driver:d*s.driverDay};b.rental=b.sugg.fuel+b.sugg.rental+b.sugg.driver};
+    const s=data.settings,d=daysOf(),km=num(b.oneKm)*(b.round?2:1);
+    if(km){
+      const fuel=Math.ceil(km/(s.base/mult($('#traffic').value||'3'))*s.price/100-1e-9)*100;
+      b.sugg={fuel,rental:Math.round(d*s.rentalDay+fuel*s.rentalPer/s.rentalBlock),driver:d*s.driverDay};
+      b.fuelC=fuel;b.driverC=b.sugg.driver;
+      if(!b.rentalManual)b.rental=fuel+b.sugg.rental+b.sugg.driver;
+    }else if(!b.rentalManual){b.rental=4000;b.fuelC=b.driverC=0;b.sugg=null}};
   if(!ex&&!simple)auto(); // an existing booking keeps its saved amounts until something that affects them is changed
   const draw=()=>{
     root.innerHTML=`<div class="modal"><div class="sheet">
@@ -606,8 +613,10 @@ function openBooking(id,pre){
         <div class="full"><label>Other ₱ (toll, extras…)</label><input id="f-other" type="number" inputmode="decimal" min="0" value="${esc(b.other)}"></div>
        </div>
        <div class="note" id="f-explain"></div>
+       <div class="total-line" style="margin:12px 2px 0"><span>Van Money <small>(paid − fuel − driver)</small></span><b id="f-van" style="font-size:20px"></b></div>
        <button class="btn sm" id="f-reset" style="margin-top:8px">Reset fees to automatic</button>
      </details>`}
+     ${simple?`<div class="total-line" style="margin:12px 2px 0"><span>Van Money <small>(paid − fuel − driver)</small></span><b id="f-van" style="font-size:20px"></b></div>`:''}
      <h3 style="margin:16px 0 8px;font-size:14px">Payments</h3>
      <div id="f-pays"></div>
      <div class="row"><button class="btn sm" id="f-addpay" style="flex:0">+ Add payment</button><span class="sp"></span><span id="f-bal" style="text-align:right"></span></div>
@@ -669,7 +678,8 @@ function openBooking(id,pre){
     sums();checkOverlap();mapLink();
   };
   const mapLink=()=>{if(!$('#f-map'))return;$('#f-map').href='https://www.google.com/maps/search/?api=1&query='+enc((b.route||'').replace(/\(round trip\)/i,'').replace(/→/g,' to '))};
-  const sums=()=>{const t=totalOf(b),p=paidOf(b),bal=t-p;if(!simple)$('#f-total').textContent=peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
+  const sums=()=>{const t=simple?num(b.rental):totalOf(b),p=paidOf(b),bal=t-p,van=p-(simple?num(b.fuelC)+num(b.driverC):num(b.fuel)+num(b.driverFee));
+    const vEl=$('#f-van');if(vEl){vEl.textContent=peso(van);vEl.style.color=vanColor(van)}if(!simple)$('#f-total').textContent=peso(t);$('#f-bal').innerHTML=`Paid ${peso(p)} · <b style="color:${bal>0?'var(--red)':'var(--grn)'}">${bal>0?'Due '+peso(bal):bal<0?'Overpaid '+peso(-bal):'Settled'}</b>`};
   const drawPays=()=>{
     $('#f-pays').innerHTML=b.payments.map((p,i)=>`<div class="pay"><input type="date" data-i="${i}" data-k="date" value="${esc(p.date)}"><input type="number" inputmode="decimal" min="0" placeholder="₱ amount" data-i="${i}" data-k="amount" value="${esc(p.amount)}"><button class="btn sm" data-x="${i}" aria-label="Remove payment">✕</button><input placeholder="note (GCash, cash, deposit…)" data-i="${i}" data-k="note" value="${esc(p.note||'')}"></div>`).join('')||'<div class="note">No payments recorded.</div>';
     $('#f-pays').querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{b.payments[el.dataset.i][el.dataset.k]=el.value;sums()}));
@@ -681,7 +691,7 @@ function openBooking(id,pre){
   };
   const save=()=>{
     const rec={id:ex?ex.id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),customer:(b.customer||'').trim(),phone:(b.phone||'').trim(),start:b.start,end:b.end,status:b.status,route:simple?((b.from&&b.to)?b.from.trim()+' → '+b.to.trim()+(b.round?' (round trip)':''):(b.to||'').trim()):(b.route||''),km:simple?Math.round(num(b.oneKm)*(b.round?2:1)):num(b.km),
-      fuel:num(b.fuel),rental:num(b.rental),withDriver:!!b.withDriver,driverFee:num(b.driverFee),rentalManual:!!b.rentalManual,driverManual:!!b.driverManual,affiliate:!!b.affiliate,affiliateFee:num(b.affiliateFee),affiliateManual:!!b.affiliateManual,other:num(b.other),simple,...(simple?{from:b.from||'',to:b.to||'',round:!!b.round,oneKm:num(b.oneKm)}:{}),notes:b.notes||'',
+      fuel:simple?num(b.fuelC):num(b.fuel),rental:simple?num(b.rental)-num(b.fuelC)-num(b.driverC):num(b.rental),withDriver:!!b.withDriver,driverFee:simple?num(b.driverC):num(b.driverFee),rentalManual:!!b.rentalManual,driverManual:!!b.driverManual,affiliate:!!b.affiliate,affiliateFee:num(b.affiliateFee),affiliateManual:!!b.affiliateManual,other:num(b.other),simple,...(simple?{from:b.from||'',to:b.to||'',round:!!b.round,oneKm:num(b.oneKm)}:{}),notes:b.notes||'',
       payments:b.payments.filter(p=>num(p.amount)!==0).map(p=>({date:p.date,amount:num(p.amount),note:p.note||''}))};
     upsert('bookings',rec);
     S.month=new Date(parse(rec.start).getFullYear(),parse(rec.start).getMonth(),1);S.sel=rec.start;
